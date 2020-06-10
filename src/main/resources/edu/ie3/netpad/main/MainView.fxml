@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+
+<?import javafx.scene.control.MenuBar?>
+<BorderPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="edu.ie3.netpad.main.controller.MainController">
+
+    <top>
+        <VBox BorderPane.alignment="CENTER_RIGHT">
+            <!--      the rule being that the field name is the value of the fx:id attribute with "Controller" appended-->
+            <!--            <fx:include fx:id="fileMenu" source="../controller/io/IoMenu.fxml"/>-->
+            <fx:include fx:id="mainMenuBar" source="../menu/MenuBar.fxml"/>
+<!--            <MenuBar>-->
+<!--                <fx:include fx:id="fileMenu" source="../controller/io/IoMenu.fxml"/>-->
+
+<!--                &lt;!&ndash;                <fx:include fx:id="tool" source="../controller/tool/ToolView.fxml"/>&ndash;&gt;-->
+<!--            </MenuBar>-->
+        </VBox>
+    </top>
+
+    <left>
+        <VBox alignment="TOP_CENTER" minWidth="30.0">
+            <VBox.margin>
+                <Insets left="-20.0" right="-20.0"/>
+            </VBox.margin>
+            <Button disable="true" fx:id="gridInfoButton" minHeight="20.0" minWidth="70.0" prefHeight="20.0"
+                    prefWidth="70.0" rotate="-90.0" text="Grid Info">
+                <padding>
+                    <Insets left="-5.0" right="-5.0"/>
+                </padding>
+                <VBox.margin>
+                    <Insets left="-25.0" right="-25.0" top="35.0"/>
+                </VBox.margin>
+            </Button>
+        </VBox>
+    </left>
+
+    <center>
+        <SplitPane fx:id="splitPane">
+            <fx:include fx:id="gridInfo" source="../controller/gridInfo/GridInfoView.fxml"/>
+            <TabPane tabClosingPolicy="UNAVAILABLE">
+                <tabs>
+                    <Tab text="Map">
+                        <content>
+                            <fx:include fx:id="map"
+                                        source="../grid/map/Map.fxml"/>
+                        </content>
+                    </Tab>
+                </tabs>
+            </TabPane>
+        </SplitPane>
+    </center>
+</BorderPane>

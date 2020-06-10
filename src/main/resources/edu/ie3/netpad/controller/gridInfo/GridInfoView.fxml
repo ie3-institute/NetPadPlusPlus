@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import org.controlsfx.control.CheckTreeView?>
+
+<ScrollPane fx:id="outerScrollPane" fitToHeight="true" fitToWidth="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.ie3.netpad.grid.info.GridInfoController">
+   <content>
+      <VBox fx:id="upperVBox">
+         <children>
+            <CheckTreeView fx:id="selectedGridCheckTreeView" minHeight="-Infinity" minWidth="-Infinity" VBox.vgrow="ALWAYS" />
+            <Pane />
+         </children></VBox>
+   </content>
+   <padding>
+      <Insets top="-1.0" />
+   </padding>
+</ScrollPane>

@@ -1,0 +1,134 @@
+plugins {
+	id 'groovy'
+	id 'java'
+	id 'application' // creates a JVM executable
+	id 'maven-publish'
+	id 'pmd' //code check, working on source code
+	id "com.github.spotbugs" version "4.3.0" //code check, working on byte code
+	id "com.diffplug.gradle.spotless" version "4.3.0" //code format
+	id 'com.github.onslip.gradle-one-jar' version '1.0.5' // pack a self contained jar
+	id 'org.openjfx.javafxplugin' version '0.0.8' // java 11 javafx plugin for gradle
+	id 'jacoco' // java code coverage plugin
+	id "org.sonarqube" version "3.0" // sonarqube
+}
+
+ext {
+	//version (changing these should be considered thoroughly!)
+	javaVersion = JavaVersion.VERSION_11
+
+	unitsOfMeasurementVersion = '1.0.10'
+	javaFxVersion = '15-ea+1'
+	slf4jVersion = '1.7.26'
+
+	scriptsLocation = 'gradle' + File.separator + 'scripts' + File.separator //location of script plugins
+
+	mainClass = 'edu.ie3.netpad.main.NetPadPlusPlus'
+}
+
+apply from: scriptsLocation + 'tests.gradle'
+apply from: scriptsLocation + 'pmd.gradle'
+apply from: scriptsLocation + 'spotbugs.gradle'
+apply from: scriptsLocation + 'spotless.gradle'
+apply from: scriptsLocation + 'checkJavaVersion.gradle'
+apply from: scriptsLocation + 'sonarqube.gradle'
+apply from: scriptsLocation + 'selfContainedJar.gradle'
+apply from: scriptsLocation + 'jacoco.gradle'
+
+
+
+group = 'edu.ie3'
+description = 'NetPad++'
+version = '0.0.1-SNAPSHOT'
+
+sourceCompatibility = javaVersion
+
+repositories {
+	jcenter() //searches in bintray's repository 'jCenter', which contains Maven Central
+	maven { url "https://jitpack.io" } // allows for github repos as dependencies
+	maven { url 'https://oss.sonatype.org/service/local/repositories/snapshots/content' } // snapshot artifacts
+}
+
+dependencies {
+
+	// ie³ github repository
+	compile ('com.github.ie3-institute:PowerSystemDataModel:1.1-SNAPSHOT') {
+		/* Exclude nested logging and ie³ related dependencies */
+		exclude group: 'org.slf4j'
+		exclude group: 'com.github.ie3-institute'
+	}
+
+	compile ('com.github.ie3-institute:PowerSystemUtils:1.3.1') {
+		/* Exclude nested logging and ie³ related dependencies */
+		exclude group: 'org.slf4j'
+		exclude group: 'com.github.ie3-institute'
+	}
+
+	// gluon hq
+	compile 'com.gluonhq:maps:2.0.0-ea+3'
+	implementation 'com.gluonhq.attach:util:4.0.7'
+	implementation 'com.gluonhq.attach:storage:4.0.7:desktop'
+
+	// JGraphT
+	compile 'org.jgrapht:jgrapht-core:1.3.1'
+	compile 'org.jgrapht:jgrapht-ext:1.3.1'
+
+
+	// javafx
+	compile "org.openjfx:javafx-fxml:$javaFxVersion"
+	compile "org.openjfx:javafx-swing:$javaFxVersion"
+	compile "org.openjfx:javafx-graphics:$javaFxVersion"
+	compile "org.openjfx:javafx-web:$javaFxVersion"
+	implementation 'org.controlsfx:controlsfx:11.0.1'
+
+	// Apache POI
+	compile 'org.apache.poi:poi-ooxml:4.1.0'
+
+	// rx java
+	compile 'io.reactivex:rxjava:1.3.8'
+
+	// logging
+	compile "org.slf4j:slf4j-api:${slf4jVersion}" // slf4j wrapper
+	compile 'com.lmax:disruptor:+' //async logging
+	compile 'org.apache.logging.log4j:log4j-api:+' // log4j
+	compile 'org.apache.logging.log4j:log4j-core:+' // log4j
+	compile 'org.apache.logging.log4j:log4j-slf4j-impl:+' // log4j -> slf4j
+
+
+	// testing
+	testCompile 'junit:junit:+'
+	testCompile 'org.spockframework:spock-core:1.3-groovy-+'
+	testCompile 'cglib:cglib-nodep:+' //enables mocking of classes (in addition to interfaces)
+	compile 'org.mockito:mockito-core:+' //mocking framework
+
+	// pbf parser //
+	compile 'com.github.johanneshiry:OSMonaut:1.1'
+}
+
+wrapper {
+	gradleVersion = '6.4.1'
+}
+
+run {
+	// Gradle uses an empty Input as default, leading to a non-blocking behaviour and thus an immediate shutdown
+	standardInput = System.in
+}
+
+jar {
+	manifest {
+		attributes(
+				'Main-Class': mainClass
+				)
+	}
+}
+
+javafx {
+	version = javaFxVersion
+	// corresponding javafx modules
+	modules = [
+		'javafx.controls',
+		'javafx.fxml',
+		'javafx.swing',
+		'javafx.graphics',
+		'javafx.web'
+	]
+}

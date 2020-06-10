@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.AnchorPane?>
+
+<?import com.gluonhq.maps.MapView?>
+
+<MapView fx:controller="edu.ie3.netpad.map.MapController"
+         fx:id="map"
+         xmlns="http://javafx.com/javafx"
+         xmlns:fx="http://javafx.com/fxml"/>
