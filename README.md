@@ -1,5 +1,6 @@
 # NetPad++
 [![Build Status](https://simona.ie3.e-technik.tu-dortmund.de/ci/buildStatus/icon?job=ie3-institute%2FNetPadPlusPlus%2Fmaster)](https://simona.ie3.e-technik.tu-dortmund.de/ci/job/ie3-institute/job/NetPadPlusPlus/job/master/)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/25d2719cc77247559527f4a60b1b3277)](https://www.codacy.com/gh/ie3-institute/NetPadPlusPlus?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ie3-institute/NetPadPlusPlus&amp;utm_campaign=Badge_Grade)
 
 A simple graphical user interface to allow manipulation of grids that are in PowerSystemDataModel format.
 Currently, the editor supports read and write operations from and to .csv-file grid data.
