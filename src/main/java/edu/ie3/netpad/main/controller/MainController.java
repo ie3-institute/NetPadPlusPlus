@@ -71,7 +71,7 @@ public class MainController implements GridEventListener {
 
   /**
    * Will be called once when the contents of its associated document (= @FXML annotated members)
-   * have been completely loaded --> allows to perform any necessary !!! post-processing !!! on the
+   * have been completely loaded. this allows to perform any necessary !!! post-processing !!! on the
    * annotated members e.g. get/set data or bindings from the fields visible on the view and should
    * NOT be used for anything else! (NO service registration or something else)
    */
