@@ -34,8 +34,6 @@ apply from: scriptsLocation + 'sonarqube.gradle'
 apply from: scriptsLocation + 'selfContainedJar.gradle'
 apply from: scriptsLocation + 'jacoco.gradle'
 
-
-
 group = 'edu.ie3'
 description = 'NetPad++'
 version = '0.0.1-SNAPSHOT'
@@ -131,4 +129,14 @@ javafx {
 		'javafx.graphics',
 		'javafx.web'
 	]
+}
+
+tasks.withType(JavaCompile) {
+	options.encoding = 'UTF-8'
+}
+
+task printVersion {
+	doLast {
+		println project.version
+	}
 }
