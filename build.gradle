@@ -36,7 +36,7 @@ apply from: scriptsLocation + 'selfContainedJar.gradle'
 apply from: scriptsLocation + 'jacoco.gradle'
 apply from: scriptsLocation + 'mavenCentralPublish.gradle'
 
-group = 'edu.ie3'
+group = 'com.github.ie3-institute'
 description = 'NetPad++'
 version = '0.0.1-SNAPSHOT'
 
