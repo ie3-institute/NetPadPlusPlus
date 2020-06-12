@@ -96,7 +96,7 @@ dependencies {
 
 	// testing
 	testCompile 'junit:junit:+'
-	testCompile 'org.spockframework:spock-core:1.3-groovy-+'
+	testCompile 'org.spockframework:spock-core:2.0-M1-groovy-2.5'
 	testCompile 'cglib:cglib-nodep:+' //enables mocking of classes (in addition to interfaces)
 	compile 'org.mockito:mockito-core:+' //mocking framework
 
