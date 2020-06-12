@@ -9,8 +9,14 @@ test {
 	}
 }
 
+
 task allTests(type: Test) {
 	description 'executes all tests'
+
+	useJUnitPlatform()
+	testLogging {
+		events "skipped", "failed"
+	}
 
 	mustRunAfter test
 }
