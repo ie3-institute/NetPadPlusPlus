@@ -10,6 +10,7 @@ import static java.util.stream.Collectors.toSet;
 
 import com.gluonhq.maps.MapLayer;
 import com.gluonhq.maps.MapPoint;
+import edu.ie3.datamodel.models.input.AssetInput;
 import edu.ie3.datamodel.models.input.NodeInput;
 import edu.ie3.datamodel.models.input.connector.LineInput;
 import edu.ie3.datamodel.models.input.connector.Transformer2WInput;
@@ -142,14 +143,9 @@ public class GridPaintLayer extends MapLayer {
 
       paintElement(node.getUuid(), gridNodeGraphic);
 
-      log.info("Added graphic {}", node.getId());
+      log.info("Added node {}", node.getId());
     } else {
-      throw new GridPaintLayerException(
-          "Cannot paint line (id: "
-              + node.getId()
-              + ", uuid: "
-              + node.getUuid()
-              + " with missing geo information.");
+      throw gridPaintLayerException(node);
     }
   }
 
@@ -163,12 +159,7 @@ public class GridPaintLayer extends MapLayer {
 
       log.info("Added line {}", line.getId());
     } else {
-      throw new GridPaintLayerException(
-          "Cannot paint line (id: "
-              + line.getId()
-              + ", uuid: "
-              + line.getUuid()
-              + " with missing geo information.");
+      throw gridPaintLayerException(line);
     }
   }
 
@@ -189,13 +180,19 @@ public class GridPaintLayer extends MapLayer {
       log.info("Added transformer {}", transformer2WInput.getUuid());
 
     } else {
-      throw new GridPaintLayerException(
-          "Cannot paint transformer (id: "
-              + transformer2WInput.getId()
-              + ", uuid: "
-              + transformer2WInput.getUuid()
-              + " with missing geo information in at least one node.");
+      throw gridPaintLayerException(transformer2WInput);
     }
+  }
+
+  private GridPaintLayerException gridPaintLayerException(AssetInput assetInput) {
+    return new GridPaintLayerException(
+        "Cannot paint graphic for "
+            + assetInput.getClass().getSimpleName()
+            + "(id: "
+            + assetInput.getId()
+            + ", uuid: "
+            + assetInput.getUuid()
+            + " with missing geo information in one ore more nodes!");
   }
 
   public void updateGraphicEntity(UpdateGridEvent updateGridEvent) {
