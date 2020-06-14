@@ -11,6 +11,7 @@ plugins {
 	id 'org.openjfx.javafxplugin' version '0.0.8' // java 11 javafx plugin for gradle
 	id 'jacoco' // java code coverage plugin
 	id "org.sonarqube" version "3.0" // sonarqube
+	id "com.github.johnrengelman.shadow" version "5.1.0" // fat jar
 }
 
 ext {
@@ -23,13 +24,13 @@ ext {
 
 	scriptsLocation = 'gradle' + File.separator + 'scripts' + File.separator //location of script plugins
 
-	mainClass = 'edu.ie3.netpad.main.NetPadPlusPlus'
 }
 
-mainClassName = 'edu.ie3.netpad.main.IntelliJMainLauncher'
 group = 'com.github.ie3-institute'
 description = 'NetPad++'
 version = '0.0.1-SNAPSHOT'
+
+mainClassName = 'edu.ie3.netpad.main.IntelliJMainLauncher'
 
 sourceCompatibility = javaVersion
 targetCompatibility = javaVersion
@@ -40,7 +41,6 @@ apply from: scriptsLocation + 'spotbugs.gradle'
 apply from: scriptsLocation + 'spotless.gradle'
 apply from: scriptsLocation + 'checkJavaVersion.gradle'
 apply from: scriptsLocation + 'sonarqube.gradle'
-apply from: scriptsLocation + 'selfContainedJar.gradle'
 apply from: scriptsLocation + 'jacoco.gradle'
 apply from: scriptsLocation + 'mavenCentralPublish.gradle'
 
@@ -130,4 +130,12 @@ task printVersion {
 	doLast {
 		println project.version
 	}
+}
+
+shadowJar {
+
+	transform(com.github.jengelman.gradle.plugins.shadow.transformers.AppendingTransformer) {
+		resource = 'reference.conf'
+	}
+	zip64 = true
 }
