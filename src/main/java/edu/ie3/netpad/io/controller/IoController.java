@@ -93,7 +93,7 @@ public class IoController {
     // get the CsvGridSource
     String gridName =
         path.getKey()
-            .split(File.separator)[
+            .split(File.separatorChar == '\\' ? "\\\\" : File.separator)[
             path.getKey().split(File.separatorChar == '\\' ? "\\\\" : File.separator).length - 1];
     CsvGridSource csvGridSource = new CsvGridSource(path.getKey(), gridName);
 
