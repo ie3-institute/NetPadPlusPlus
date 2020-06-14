@@ -1,4 +1,5 @@
 #!groovy​
+#!groovy​
 
 
 ////////////////////////////////
@@ -135,7 +136,7 @@ if (env.BRANCH_NAME == "master") {
                     }
 
                     // deploy snapshot version to oss sonatype
-                    stage('deploy') {
+                    stage('deploy sonatype') {
                         // get the sonatype credentials stored in the jenkins secure keychain
                         withCredentials([usernamePassword(credentialsId: mavenCentralCredentialsId, usernameVariable: 'mavencentral_username', passwordVariable: 'mavencentral_password'),
                                          file(credentialsId: mavenCentralSignKeyFileId, variable: 'mavenCentralKeyFile'),
@@ -258,7 +259,7 @@ if (env.BRANCH_NAME == "master") {
 
 
                     // deploy snapshot version to oss sonatype
-                    stage('deploy') {
+                    stage('deploy sonatype') {
                         // get the sonatype credentials stored in the jenkins secure keychain
                         withCredentials([usernamePassword(credentialsId: mavenCentralCredentialsId, usernameVariable: 'mavencentral_username', passwordVariable: 'mavencentral_password'),
                                          file(credentialsId: mavenCentralSignKeyFileId, variable: 'mavenCentralKeyFile'),
@@ -268,7 +269,13 @@ if (env.BRANCH_NAME == "master") {
                             gradle("${deployGradleTasks}")
 
                         }
+                    }
 
+                    stage('deploy github releases') {
+                        withCredentials([string(credentialsId: "netpadplusplus-github-release-access-token", variable: 'githubReleaseToken')]) {
+                            // switch directory and use the shell script
+                            sh """cd ${projects.get(0)}/sh/""" + ''' set +x; chmod 777 github-release-snapshot.sh; ''' + """./github-release-snapshot.sh $githubReleaseToken"""
+                        }
                         // notify rocket chat
                         message = (featureBranchName?.trim()) ?
                                 "master branch build successful! Merged pr from feature branch '${featureBranchName}'"
@@ -490,7 +497,7 @@ def publishReports() {
 def gradle(String command) {
     env.JENKINS_NODE_COOKIE = 'dontKillMe' // this is necessary for the Gradle daemon to be kept alive
 
-    // switch directory to bew able to use gradle wrapper
+    // switch directory to be able to use gradle wrapper
     sh """cd ${projects.get(0)}""" + ''' set +x; ./gradlew ''' + """$command"""
 }
 
