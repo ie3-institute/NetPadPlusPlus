@@ -1,8 +1,8 @@
 plugins {
-	id 'groovy'
 	id 'java'
-	id 'application' // creates a JVM executable
+	id 'groovy'
 	id 'maven-publish'
+	id 'application'
 	id 'signing'
 	id 'pmd' //code check, working on source code
 	id "com.github.spotbugs" version "4.3.0" //code check, working on byte code
@@ -26,6 +26,14 @@ ext {
 	mainClass = 'edu.ie3.netpad.main.NetPadPlusPlus'
 }
 
+mainClassName = 'edu.ie3.netpad.main.IntelliJMainLauncher'
+group = 'com.github.ie3-institute'
+description = 'NetPad++'
+version = '0.0.1-SNAPSHOT'
+
+sourceCompatibility = javaVersion
+targetCompatibility = javaVersion
+
 apply from: scriptsLocation + 'tests.gradle'
 apply from: scriptsLocation + 'pmd.gradle'
 apply from: scriptsLocation + 'spotbugs.gradle'
@@ -35,12 +43,6 @@ apply from: scriptsLocation + 'sonarqube.gradle'
 apply from: scriptsLocation + 'selfContainedJar.gradle'
 apply from: scriptsLocation + 'jacoco.gradle'
 apply from: scriptsLocation + 'mavenCentralPublish.gradle'
-
-group = 'com.github.ie3-institute'
-description = 'NetPad++'
-version = '0.0.1-SNAPSHOT'
-
-sourceCompatibility = javaVersion
 
 repositories {
 	jcenter() //searches in bintray's repository 'jCenter', which contains Maven Central
@@ -106,19 +108,6 @@ dependencies {
 
 wrapper {
 	gradleVersion = '6.4.1'
-}
-
-run {
-	// Gradle uses an empty Input as default, leading to a non-blocking behaviour and thus an immediate shutdown
-	standardInput = System.in
-}
-
-jar {
-	manifest {
-		attributes(
-				'Main-Class': mainClass
-				)
-	}
 }
 
 javafx {

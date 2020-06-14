@@ -30,26 +30,26 @@ if (project.hasProperty('user') && project.hasProperty('password')) {
 					}
 				}
 				pom {
-					description = 'Elaborated data model to model energy systems with a high granularity @ the Institute of Energy Systems, Energy Efficiency and Energy Economics (ie3) @ TU Dortmund University'
-					name = 'Power System Data Model'
-					url = 'https:github.com/ie3-institute/PowerSystemDatamodel'
+					description = 'A simple graphical user interface grid editor to manipulate grids in the ie3 PowerSystemDataModel format.'
+					name = 'NetPad++'
+					url = 'https:github.com/ie3-institute/NetPadPlusPlus'
 					organization {
 						name = 'Institute of Energy Systems, Energy Efficiency and Energy Economics (ie3)/TU Dortmund University'
 						url = 'http:www.ie3.tu-dortmund.de/'
 					}
 					issueManagement {
 						system = 'GitHub'
-						url = 'https:github.com/ie3-institute/PowerSystemDataModel/issues'
+						url = 'https:github.com/ie3-institute/NetPadPlusPlus/issues'
 					}
 					licenses {
 						license {
 							name = 'BSD 3-Clause License'
-							url = 'https:github.com/ie3-institute/PowerSystemDataModel/blob/master/LICENSE'
+							url = 'https:github.com/ie3-institute/NetPadPlusPlus/blob/master/LICENSE'
 						}
 						scm {
 							connection = 'scm:git:git:github.com/ie3-institute/PowerSystemDataModel.git'
 							developerConnection = 'scm:git:ssh:github.com:ie3-institute/PowerSystemDataModel.git'
-							url = 'https:github.com/ie3-institute/PowerSystemDataModel'
+							url = 'https:github.com/ie3-institute/NetPadPlusPlus'
 						}
 						developers {
 							[
@@ -62,11 +62,6 @@ if (project.hasProperty('user') && project.hasProperty('password')) {
 									id = 'ckittl'
 									name = 'Chris Kittl'
 									email = 'chris.kittl@tu-dortmund.de'
-								},
-								developer {
-									id = 'sensarmad'
-									name = 'Debopama Sen Sarma'
-									email = 'debopama-sen.sarma@tu-dortmund.de'
 								}
 							]
 						}
@@ -75,7 +70,7 @@ if (project.hasProperty('user') && project.hasProperty('password')) {
 
 				removeTestDependenciesFromPom(pom)
 				groupId group
-				artifactId 'PowerSystemDataModel'
+				artifactId 'NetPadPlusPlus'
 				version version
 
 				from components.java
