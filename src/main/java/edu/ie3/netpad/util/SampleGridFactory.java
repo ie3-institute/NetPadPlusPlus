@@ -6,6 +6,7 @@
 package edu.ie3.netpad.util;
 
 import static edu.ie3.util.quantities.PowerSystemUnits.*;
+import static tec.uom.se.unit.Units.AMPERE;
 
 import edu.ie3.datamodel.exceptions.ParsingException;
 import edu.ie3.datamodel.models.BdewLoadProfile;
@@ -264,7 +265,7 @@ public class SampleGridFactory {
             Quantities.getQuantity(0, PowerSystemUnits.SIEMENS_PER_KILOMETRE),
             Quantities.getQuantity(0.253899991512299, PowerSystemUnits.OHM_PER_KILOMETRE),
             Quantities.getQuantity(0.0691149979829788, PowerSystemUnits.OHM_PER_KILOMETRE),
-            Quantities.getQuantity(265, PowerSystemUnits.AMPERE),
+            Quantities.getQuantity(265, AMPERE),
             Quantities.getQuantity(0.4, KILOVOLT));
 
     LineInput lineAB =
@@ -374,7 +375,7 @@ public class SampleGridFactory {
             Quantities.getQuantity(0, PowerSystemUnits.SIEMENS_PER_KILOMETRE),
             Quantities.getQuantity(0.207000002264977, PowerSystemUnits.OHM_PER_KILOMETRE),
             Quantities.getQuantity(0.0691149979829788, PowerSystemUnits.OHM_PER_KILOMETRE),
-            Quantities.getQuantity(300, PowerSystemUnits.AMPERE),
+            Quantities.getQuantity(300, AMPERE),
             Quantities.getQuantity(10, KILOVOLT));
 
     LineInput lineDE =
