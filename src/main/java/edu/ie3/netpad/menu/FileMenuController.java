@@ -32,9 +32,6 @@ public class FileMenuController {
 
   private MenuBar menuBar;
 
-  @FXML
-  public void initialize() {}
-
   public void setMenuBar(MenuBar menuBar) {
     this.menuBar = menuBar;
   }
