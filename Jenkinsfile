@@ -269,22 +269,22 @@ if (env.BRANCH_NAME == "master") {
                         }
                     }
 
-                    stage('deploy github releases') {
-                        withCredentials([string(credentialsId: "netpadplusplus-github-release-access-token", variable: 'githubReleaseToken')]) {
-                            // switch directory and use the shell script
-                            sh """cd ${projects.get(0)}""" + ''' set +x; chmod 777 sh/github-release-snapshot.sh; ''' + """./sh/github-release-snapshot.sh $githubReleaseToken"""
-                        }
-                        // notify rocket chat
-                        message = (featureBranchName?.trim()) ?
-                                "master branch build successful! Merged pr from feature branch '${featureBranchName}'"
-                                : "master branch build successful! Build commit with message is '${jsonObject.commit.message}'"
-                        rocketSend channel: rocketChatChannel, emoji: ':jenkins_party:',
-                                message: message + "\n" +
-                                        "*repo:* ${urls.get(0)}/${projects.get(0)}\n" +
-                                        "*branch:* master \n"
-                        rawMessage: true
-
-                    }
+//                    stage('deploy github releases') {
+//                        withCredentials([string(credentialsId: "netpadplusplus-github-release-access-token", variable: 'githubReleaseToken')]) {
+//                            // switch directory and use the shell script
+//                            sh """cd ${projects.get(0)}""" + ''' set +x; chmod 777 sh/github-release-snapshot.sh; ''' + """./sh/github-release-snapshot.sh $githubReleaseToken"""
+//                        }
+//                        // notify rocket chat
+//                        message = (featureBranchName?.trim()) ?
+//                                "master branch build successful! Merged pr from feature branch '${featureBranchName}'"
+//                                : "master branch build successful! Build commit with message is '${jsonObject.commit.message}'"
+//                        rocketSend channel: rocketChatChannel, emoji: ':jenkins_party:',
+//                                message: message + "\n" +
+//                                        "*repo:* ${urls.get(0)}/${projects.get(0)}\n" +
+//                                        "*branch:* master \n"
+//                        rawMessage: true
+//
+//                    }
 
 
                 } catch (Exception e) {
