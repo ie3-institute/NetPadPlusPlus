@@ -5,6 +5,8 @@
 */
 package edu.ie3.netpad.main;
 
+import edu.ie3.netpad.exception.NetPadPlusPlusException;
+
 /**
  * Helper class needed when launching the app from IntelliJ. see
  * https://stackoverflow.com/questions/52653836/maven-shade-javafx-runtime-components-are-missing
@@ -16,6 +18,9 @@ package edu.ie3.netpad.main;
 public class IntelliJMainLauncher {
 
   public static void main(String[] args) {
+    if (args.length > 0)
+      throw new NetPadPlusPlusException("Providing arguments is currently not supported!");
+
     NetPadPlusPlus.main(args);
   }
 }

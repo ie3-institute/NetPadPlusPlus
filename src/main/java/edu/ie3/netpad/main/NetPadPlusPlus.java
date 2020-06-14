@@ -8,6 +8,7 @@ package edu.ie3.netpad.main;
 import com.gluonhq.attach.storage.StorageService;
 import com.gluonhq.attach.util.Services;
 import com.gluonhq.attach.util.impl.ServiceFactory;
+import edu.ie3.netpad.exception.NetPadPlusPlusException;
 import edu.ie3.netpad.main.controller.MainController;
 import java.io.*;
 import java.util.Optional;
@@ -114,8 +115,9 @@ public class NetPadPlusPlus extends Application {
   }
 
   public static void main(String[] args) {
-
     logger.trace("begin main");
+    if (args.length > 0)
+      throw new NetPadPlusPlusException("Providing arguments is currently not supported!");
 
     launch(args);
     logger.trace("end main");
