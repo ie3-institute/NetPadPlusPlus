@@ -30,6 +30,7 @@ import edu.ie3.netpad.map.event.MapEvent;
 import edu.ie3.netpad.tool.ToolController;
 import edu.ie3.netpad.tool.event.LayoutGridRequestEvent;
 import edu.ie3.netpad.tool.event.LayoutGridResponse;
+import edu.ie3.netpad.tool.event.ToolEvent;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -175,7 +176,7 @@ public class GridController {
   }
 
   // todo JH clean this method
-  private ChangeListener<edu.ie3.netpad.tool.event.ToolEvent> toolEventListener() {
+  private ChangeListener<ToolEvent> toolEventListener() {
     return (observable, oldValue, newValue) -> {
       if (newValue instanceof LayoutGridRequestEvent) {
         JointGridContainer currentFullGrid =
@@ -184,12 +185,12 @@ public class GridController {
                     .map(GridModel::getSubGridContainer)
                     .collect(Collectors.toList()));
         ((LayoutGridRequestEvent) newValue).readGridEventPropertyProperty().set(currentFullGrid);
-        System.out.println("Received Tool request evenz");
+        log.debug("Received Tool request event");
       } else if (newValue instanceof LayoutGridResponse) {
         handleReadGridEvent(new ReadGridEvent(((LayoutGridResponse) newValue).getGrid()));
-        System.out.println("Received Tool response evenz");
+        log.debug("Received Tool response event");
       } else {
-        throw new RuntimeException("BLAFO"); // todo JH
+        throw new RuntimeException("Invalid GridContainer provided!");
       }
 
       // todo JH

@@ -27,7 +27,7 @@ import javafx.util.Callback;
  */
 abstract class DialogProvider {
 
-  private DialogProvider() {}
+  protected DialogProvider() {}
 
   protected static <T extends AssetInput> Dialog<T> getDialog(
       String dialogTitle,
