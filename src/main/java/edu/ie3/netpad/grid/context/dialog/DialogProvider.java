@@ -20,12 +20,14 @@ import javafx.scene.layout.GridPane;
 import javafx.util.Callback;
 
 /**
- * //ToDo: Class Description
+ * Provides methods commonly used by Dialogs that are shown to edit grid elements
  *
  * @version 0.1
  * @since 03.06.20
  */
 abstract class DialogProvider {
+
+  private DialogProvider() {}
 
   protected static <T extends AssetInput> Dialog<T> getDialog(
       String dialogTitle,
@@ -66,12 +68,7 @@ abstract class DialogProvider {
 
   protected static GridPane getAssetInputEditGridPane(Map<String, String> fieldsToAttributes) {
 
-    //        List<String> disabledFields =
-    //                        Arrays.asList("operator", "geoposition", "subnet", "voltlvl", "slack",
-    // "vrated", "vtarget",
-    //                                        "operatesfrom", "operatesuntil", "uuid");
-
-    List<String> enabledFields = Arrays.asList("id");
+    List<String> enabledFields = Collections.singletonList("id");
 
     // Create the grid pane, that holds all contents
     GridPane gridPane = new GridPane();

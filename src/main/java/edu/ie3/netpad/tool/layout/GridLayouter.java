@@ -5,6 +5,8 @@
 */
 package edu.ie3.netpad.tool.layout;
 
+import static java.awt.geom.Point2D.distance;
+
 import com.mxgraph.layout.hierarchical.mxHierarchicalLayout;
 import com.mxgraph.model.mxICell;
 import edu.ie3.datamodel.graph.DistanceWeightedEdge;
@@ -23,8 +25,6 @@ import net.morbz.osmonaut.osm.LatLon;
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
 import org.jgrapht.ext.JGraphXAdapter;
-
-import static java.awt.geom.Point2D.distance;
 
 /**
  * The class lays out nodes in a {@link edu.ie3.datamodel.models.input.container.GridContainer}
