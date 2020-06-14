@@ -107,7 +107,7 @@ public abstract class GridGraphicImpl<T extends Shape> implements GridGraphic {
         new NodeGeoPositionUpdateEvent(subGridUuid, oldNodeInput, updatedGeoPosition));
   }
 
-  protected void installTooltip(Shape shape, String txt) {
+  private void installTooltip(Shape shape, String txt) {
     Tooltip.install(shape, new Tooltip(txt));
   }
 
@@ -166,7 +166,7 @@ public abstract class GridGraphicImpl<T extends Shape> implements GridGraphic {
     }
   }
 
-  protected void draggableNode(NodeInput nodeToBeUpdated) {
+  private void draggableNode(NodeInput nodeToBeUpdated) {
 
     AtomicReference<Double> orgSceneX = new AtomicReference<>(0d);
     AtomicReference<Double> orgSceneY = new AtomicReference<>(0d);
