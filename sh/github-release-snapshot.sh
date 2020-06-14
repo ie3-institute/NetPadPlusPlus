@@ -5,6 +5,7 @@ token=$1
 
 # get current version from gradle 
 version=v$(../gradlew -q printVersion)
+echo "current version: ${version}"
 
 # check if release exists for this tag
 ## get the id if any 
@@ -12,9 +13,9 @@ id=$(curl -s -XGET -H "Authorization:token $token" https://api.github.com/repos/
 
 if [[ -z "$id" ]]
 then
-      echo "no release for tag exists, creating new release"
+      echo "no release for tag ${version} exists, creating new release"
 else
-      echo "release for tag exists, deleting it before new release creation"
+      echo "release for tag ${version} exists, deleting it before new release creation"
       curl -s -XDELETE -H "Authorization:token $token" https://api.github.com/repos/ie3-institute/NetPadPlusPlus/releases/$id
 fi
 

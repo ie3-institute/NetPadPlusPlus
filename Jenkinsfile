@@ -272,7 +272,7 @@ if (env.BRANCH_NAME == "master") {
                     stage('deploy github releases') {
                         withCredentials([string(credentialsId: "netpadplusplus-github-release-access-token", variable: 'githubReleaseToken')]) {
                             // switch directory and use the shell script
-                            sh """cd ${projects.get(0)}/sh/""" + ''' set +x; chmod 777 github-release-snapshot.sh; ''' + """./github-release-snapshot.sh $githubReleaseToken"""
+                            sh """cd ${projects.get(0)}""" + ''' set +x; chmod 777 sh/github-release-snapshot.sh; ''' + """./sh/github-release-snapshot.sh $githubReleaseToken"""
                         }
                         // notify rocket chat
                         message = (featureBranchName?.trim()) ?
