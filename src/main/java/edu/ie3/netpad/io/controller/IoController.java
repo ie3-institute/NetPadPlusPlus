@@ -137,13 +137,6 @@ public class IoController {
             for (File availableInputFolder : availableInputFolders) {
               prefixListView.getItems().add(availableInputFolder.getName());
             }
-            // Make the list view only as big as it needs to be (does not work this way because no
-            // cell factory is set)
-            //                        prefixListView.setFixedCellSize(30);
-            //
-            // prefixListView.prefHeightProperty().bind(Bindings.size(prefixListView.getItems())
-            //
-            // .multiply(prefixListView.fixedCellSizeProperty().add(1)));
 
             selectPrefixDialog.getDialogPane().setContent(prefixListView);
 
