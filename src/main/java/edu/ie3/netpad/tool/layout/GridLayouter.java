@@ -24,6 +24,8 @@ import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
 import org.jgrapht.ext.JGraphXAdapter;
 
+import static java.awt.geom.Point2D.distance;
+
 /**
  * The class lays out nodes in a {@link edu.ie3.datamodel.models.input.container.GridContainer}
  * using a hierarchical layout algorithm.
@@ -88,7 +90,7 @@ public class GridLayouter {
                   // Calculate the distance and the bearing between point and reference point and
                   // calculate the geo position.
                   double distance =
-                      Point.distance(
+                      distance(
                               point.getX(),
                               point.getY(),
                               referencePoint.getX(),
@@ -243,7 +245,7 @@ public class GridLayouter {
 
       // Calculate distance between secondaryPoint and referencePoint
       double distance =
-          Point.distance(
+          distance(
               secondaryPoint.getX(),
               secondaryPoint.getY(),
               referencePoint.getX(),
