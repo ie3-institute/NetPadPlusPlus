@@ -31,7 +31,7 @@ public class CaptionLayer extends MapLayer {
 
   private Node createCaption() {
 
-    final double captionHeight = MapGridElementAttribute.values().length * 20 + 5;
+    final double captionHeight = MapGridElementAttribute.values().length * 20d + 5d;
     final double captionWidth = 100.0;
     final double lblPadding = 20.0;
 

@@ -14,6 +14,7 @@ import edu.ie3.netpad.grid.event.UpdateGridEvent;
 import edu.ie3.netpad.grid.info.GridInfoEvent;
 import edu.ie3.netpad.map.event.MapEvent;
 import edu.ie3.netpad.util.ListenerUtil;
+import edu.ie3.netpad.util.RandomSingleton;
 import java.util.*;
 import java.util.stream.Collectors;
 import javafx.beans.property.ObjectProperty;
@@ -162,11 +163,9 @@ public class MapController implements GridEventListener {
 
   protected Color randomColor() {
 
-    Random rand = new Random();
-
-    double r = ((rand.nextFloat() * Math.random()) / 2f + 0.25f);
-    double g = ((rand.nextFloat() * Math.random()) / 2f + 0.25f);
-    double b = rand.nextDouble() / 2d + 0.25d;
+    double r = ((RandomSingleton.nextFloat() * Math.random()) / 2f + 0.25f);
+    double g = ((RandomSingleton.nextFloat() * Math.random()) / 2f + 0.25f);
+    double b = RandomSingleton.nextDouble() / 2d + 0.25d;
 
     Color randColor = new Color(r, g, b, 1);
 
