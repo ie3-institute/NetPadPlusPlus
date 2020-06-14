@@ -4,7 +4,7 @@
 token=$1
 
 # get current version from gradle 
-version=v$(../gradlew -q printVersion)
+version=v$(./gradlew -q printVersion)
 echo "current version: ${version}"
 
 # check if release exists for this tag
@@ -40,16 +40,17 @@ echo "new release id: $id"
 # Create & Upload the artifact
 ## create
 echo 'creating shadow jar ...'
-../gradlew -q clean shadowJar
+./gradlew -q clean shadowJar
 
 ## compress
 echo 'compressing ...'
-rm NetPadPlusPlus.zip 2> /dev/null
-zip -jr NetPadPlusPlus.zip build/libs/
+rm NetPadPlusPlus.tar.gz 2> /dev/null
+tar -czvf NetPadPlusPlus.tar.gz -C build/libs .
+
 
 ## upload
 echo 'uploading artifact ...'
-curl -XPOST -H "Authorization:token $token" -H "Content-Type: application/zip" --data-binary @NetPadPlusPlus.zip https://uploads.github.com/repos/ie3-institute/NetPadPlusPlus/releases/${id}/assets?name=NetPadPlusPlus.zip
+curl -XPOST -H "Authorization:token $token" -H "Content-Type: application/octet-stream" --data-binary @NetPadPlusPlus.tar.gz https://uploads.github.com/repos/ie3-institute/NetPadPlusPlus/releases/${id}/assets?name=NetPadPlusPlus.tar.gz
 
 ## cleanup
-rm NetPadPlusPlus.zip 2> /dev/null
+rm NetPadPlusPlus.tar.gz 2> /dev/null
