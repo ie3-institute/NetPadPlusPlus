@@ -44,9 +44,6 @@ public class GridInfoController implements GridEventListener {
 
   private final ObjectProperty<GridInfoEvent> gridInfoEventProperty = new SimpleObjectProperty<>();
 
-  @FXML
-  private void initialize() {}
-
   @Override
   public ChangeListener<GridEvent> gridEventListener() {
     return gridEventListener;
