@@ -50,7 +50,7 @@ tar -czvf NetPadPlusPlus.tar.gz -C build/libs .
 
 ## upload
 echo 'uploading artifact ...'
-curl -XPOST -H "Authorization:token $token" -H "Content-Type: application/octet-stream" --data-binary @NetPadPlusPlus.tar.gz https://uploads.github.com/repos/ie3-institute/NetPadPlusPlus/releases/${id}/assets?name=NetPadPlusPlus.tar.gz
+curl -s -XPOST -H "Authorization:token $token" -H "Content-Type: application/octet-stream" --data-binary @NetPadPlusPlus.tar.gz https://uploads.github.com/repos/ie3-institute/NetPadPlusPlus/releases/${id}/assets?name=NetPadPlusPlus.tar.gz
 
 ## cleanup
 rm NetPadPlusPlus.tar.gz 2> /dev/null
