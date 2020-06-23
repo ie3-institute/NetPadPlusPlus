@@ -214,6 +214,9 @@ public class SampleGridFactory {
 
     GeoJsonReader geoJsonReader = new GeoJsonReader();
 
+    final String NodePosition =
+        "{ \"type\": \"Point\", \"coordinates\": [6.592276813887139, 49.37770599548332] }";
+
     // LV
     NodeInput nodeA =
         new NodeInput(
@@ -223,9 +226,7 @@ public class SampleGridFactory {
             OperationTime.notLimited(),
             Quantities.getQuantity(1, PowerSystemUnits.PU),
             false,
-            (Point)
-                geoJsonReader.read(
-                    "{ \"type\": \"Point\", \"coordinates\": [6.592276813887139, 49.37770599548332] }"),
+            (Point) geoJsonReader.read(NodePosition),
             GermanVoltageLevelUtils.LV,
             1);
 
@@ -319,9 +320,7 @@ public class SampleGridFactory {
             OperationTime.notLimited(),
             Quantities.getQuantity(1, PowerSystemUnits.PU),
             false,
-            (Point)
-                geoJsonReader.read(
-                    "{ \"type\": \"Point\", \"coordinates\": [6.592276813887139, 49.37770599548332] }"),
+            (Point) geoJsonReader.read(NodePosition),
             GermanVoltageLevelUtils.MV_10KV,
             2);
 
@@ -361,9 +360,7 @@ public class SampleGridFactory {
             OperationTime.notLimited(),
             Quantities.getQuantity(1, PowerSystemUnits.PU),
             false,
-            (Point)
-                geoJsonReader.read(
-                    "{ \"type\": \"Point\", \"coordinates\": [6.592276813887139, 49.37770599548332] }"),
+            (Point) geoJsonReader.read(NodePosition),
             GermanVoltageLevelUtils.EHV_220KV,
             4);
 
