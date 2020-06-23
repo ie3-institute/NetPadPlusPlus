@@ -95,10 +95,13 @@ public class IoController {
         path.getKey()
             .split(File.separatorChar == '\\' ? "\\\\" : File.separator)[
             path.getKey().split(File.separatorChar == '\\' ? "\\\\" : File.separator).length - 1];
-    CsvGridSource csvGridSource = new CsvGridSource(path.getKey(), gridName);
 
-    // get the grid container
-    res = Optional.of(csvGridSource.getGrid());
+    // show a dialog to select the csv separator and get the grid container afterwards
+    res =
+        IoDialogs.csvFileSeparatorDialog()
+            .showAndWait()
+            .map(
+                csvSeparator -> new CsvGridSource(path.getKey(), gridName, csvSeparator).getGrid());
 
     // if grid is present notify listener, otherwise do nothing
     res.ifPresent(grid -> notifyListener(new ReadGridEvent(grid)));

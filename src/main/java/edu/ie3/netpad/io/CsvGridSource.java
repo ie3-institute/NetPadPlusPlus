@@ -20,9 +20,7 @@ import edu.ie3.datamodel.models.input.container.SystemParticipants;
  */
 public class CsvGridSource {
 
-  private final String CSV_SEP = ";"; // todo provide option field for csv separator
-
-  private final FileNamingStrategy csvFileNamingStrategy = new FileNamingStrategy();
+  private static final FileNamingStrategy csvFileNamingStrategy = new FileNamingStrategy();
   private final CsvTypeSource csvTypeSource;
   private final CsvRawGridSource csvRawGridSource;
   private final CsvSystemParticipantSource csvSystemParticipantSource;
@@ -31,16 +29,16 @@ public class CsvGridSource {
 
   private final String gridName;
 
-  public CsvGridSource(String baseFolder, String gridName) {
+  public CsvGridSource(String baseFolder, String gridName, String csvSep) {
     this.gridName = gridName;
-    this.csvTypeSource = new CsvTypeSource(CSV_SEP, baseFolder, csvFileNamingStrategy);
+    this.csvTypeSource = new CsvTypeSource(csvSep, baseFolder, csvFileNamingStrategy);
     this.csvRawGridSource =
-        new CsvRawGridSource(CSV_SEP, baseFolder, csvFileNamingStrategy, csvTypeSource);
+        new CsvRawGridSource(csvSep, baseFolder, csvFileNamingStrategy, csvTypeSource);
     this.csvThermalSource =
-        new CsvThermalSource(CSV_SEP, baseFolder, csvFileNamingStrategy, csvTypeSource);
+        new CsvThermalSource(csvSep, baseFolder, csvFileNamingStrategy, csvTypeSource);
     this.csvSystemParticipantSource =
         new CsvSystemParticipantSource(
-            CSV_SEP,
+            csvSep,
             baseFolder,
             csvFileNamingStrategy,
             csvTypeSource,
@@ -48,7 +46,7 @@ public class CsvGridSource {
             csvRawGridSource);
     this.csvGraphicSource =
         new CsvGraphicSource(
-            CSV_SEP, baseFolder, csvFileNamingStrategy, csvTypeSource, csvRawGridSource);
+            csvSep, baseFolder, csvFileNamingStrategy, csvTypeSource, csvRawGridSource);
   }
 
   public JointGridContainer getGrid() {
