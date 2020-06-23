@@ -101,9 +101,7 @@ public class GridLayouter {
 
                   // Set the new geo position in the corresponding NodeInputModel.
                   NodeInput oldNode = entry.getValue();
-                  NodeInput updatedNode =
-                      oldNode.copy().geoPosition(GeoUtils.latlonToPoint(geoPosition)).build();
-                  return updatedNode;
+                  return oldNode.copy().geoPosition(GeoUtils.latlonToPoint(geoPosition)).build();
                   //
                   // entry.getValue().setGeoPosition(Utils.latlonToPoint(geoPosition));
                 })

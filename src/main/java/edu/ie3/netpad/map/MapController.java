@@ -167,9 +167,7 @@ public class MapController implements GridEventListener {
     double g = ((RandomSingleton.nextFloat() * RandomSingleton.nextDouble()) / 2f + 0.25f);
     double b = RandomSingleton.nextDouble() / 2d + 0.25d;
 
-    Color randColor = new Color(r, g, b, 1);
-
-    return randColor;
+    return new Color(r, g, b, 1);
   }
 
   public ChangeListener<GridInfoEvent> gridInfoEventListener() {

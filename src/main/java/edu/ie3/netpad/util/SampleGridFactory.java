@@ -26,9 +26,7 @@ import edu.ie3.datamodel.models.input.system.LoadInput;
 import edu.ie3.datamodel.models.input.system.PvInput;
 import edu.ie3.datamodel.models.input.system.StorageInput;
 import edu.ie3.datamodel.models.input.system.characteristic.CosPhiFixed;
-import edu.ie3.datamodel.models.input.system.characteristic.CosPhiP;
 import edu.ie3.datamodel.models.input.system.characteristic.OlmCharacteristicInput;
-import edu.ie3.datamodel.models.input.system.characteristic.QV;
 import edu.ie3.datamodel.models.input.system.type.StorageTypeInput;
 import edu.ie3.datamodel.models.voltagelevels.GermanVoltageLevelUtils;
 import edu.ie3.datamodel.utils.GridAndGeoUtils;
@@ -93,13 +91,6 @@ public class SampleGridFactory {
 
     cosPhiFixed = new CosPhiFixed("cosPhiFixed:{(0.0,0.95)}");
 
-    final CosPhiP cosPhiP = new CosPhiP("cosPhiP:{(0.0,1.0),(0.9,1.0),(1.2,-0.3)}");
-
-    final QV qV = new QV("qV:{(0.9,-0.3),(0.95,0.0),(1.05,0.0),(1.1,0.3)}");
-
-    final String cosPhiFixedDeSerialized = "cosPhiFixed:{(0.00,0.95)}";
-    final String cosPhiPDeSerialized = "cosPhiP:{(0.00,1.00),(0.90,1.00),(1.20,-0.30)}";
-    final String qVDeSerialized = "qV:{(0.90,-0.30),(0.95,0.00),(1.05,0.00),(1.10,0.30)}";
     final ComparableQuantity<Power> sRated = Quantities.getQuantity(25d, KILOVOLTAMPERE);
     final double cosPhiRated = 0.95;
     final UUID typeUuid = UUID.fromString("5ebd8f7e-dedb-4017-bb86-6373c4b68eb8");
