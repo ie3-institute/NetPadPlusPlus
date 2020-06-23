@@ -24,10 +24,7 @@ import java.util.Optional;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.stage.DirectoryChooser;
-import javafx.util.Pair;
 import org.locationtech.jts.io.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +63,7 @@ public class IoController {
 
   public Optional<GridContainer> createSampleGrid() {
 
-    Optional<GridContainer> sampleGridOpt = Optional.empty();
+    Optional<GridContainer> sampleGridOpt;
     try {
       sampleGridOpt = Optional.of(SampleGridFactory.sampleJointGrid());
     } catch (ParseException | ParsingException e) {
@@ -79,122 +76,54 @@ public class IoController {
     return sampleGridOpt;
   }
 
-  public Optional<JointGridContainer> loadGridFromCsv(Scene scene) {
-
-    Optional<JointGridContainer> res;
-
-    // get the path and the gridName (derived from the the folder name)
-    Pair<String, String> path =
-        buildCsvSourceFolderPath(scene)
-            .orElseThrow(
-                () ->
-                    new RuntimeException("Cannot open folder!")); // todo error handling with dialog
+  public Optional<JointGridContainer> loadGridFromCsv(File absoluteFilePath, String csvSeparator) {
 
     // get the CsvGridSource
     String gridName =
-        path.getKey()
+        absoluteFilePath.getAbsolutePath()
             .split(File.separatorChar == '\\' ? "\\\\" : File.separator)[
-            path.getKey().split(File.separatorChar == '\\' ? "\\\\" : File.separator).length - 1];
+            absoluteFilePath
+                    .getAbsolutePath()
+                    .split(File.separatorChar == '\\' ? "\\\\" : File.separator)
+                    .length
+                - 1];
 
-    // show a dialog to select the csv separator and get the grid container afterwards
-    res =
-        IoDialogs.csvFileSeparatorDialog()
-            .showAndWait()
-            .map(
-                csvSeparator -> new CsvGridSource(path.getKey(), gridName, csvSeparator).getGrid());
-
-    // if grid is present notify listener, otherwise do nothing
-    res.ifPresent(grid -> notifyListener(new ReadGridEvent(grid)));
-
-    return res;
+    // get grid and inform listeners if present
+    return new CsvGridSource(absoluteFilePath.getAbsolutePath(), gridName, csvSeparator)
+        .getGrid()
+        .map(
+            grid -> {
+              notifyListener(new ReadGridEvent(grid));
+              return grid;
+            });
   }
 
-  // todo refactor -> not checked just copied
-  // todo on refactor -> remove scene as this controller should not do anything considering scenes
-  // or stages but only IO ops
-  private Optional<Pair<String, String>> buildCsvSourceFolderPath(Scene scene) {
+  public void saveGridAsCsv(File saveFolderPath, String csvSeparator) {
+    // issue an event that we want to save,
+    // the listener provided is a one-shot instance which fires when the
+    // gridController returns
+    notifyListener(
+        new SaveGridEvent(
+            (observable, oldValue, gridContainer) -> {
 
-    // Create and open a directory chooser
-    DirectoryChooser directoryChooser = new DirectoryChooser();
-    directoryChooser.setTitle("Load GridInputModel from CSV");
+              // create a new csv file sink
+              CsvFileSink csvFileSink =
+                  new CsvFileSink(
+                      saveFolderPath.getAbsolutePath(),
+                      new ProcessorProvider(),
+                      new FileNamingStrategy(),
+                      false,
+                      csvSeparator);
 
-    File file = directoryChooser.showDialog(scene.getWindow());
-
-    if (file != null) {
-      String path = file.getPath();
-      String prefix = "";
-
-      File inputPath = new File(path.concat(System.getProperty("file.separator")).concat("input"));
-      if (inputPath.exists() && inputPath.isDirectory()) {
-        File[] availableInputFolders = inputPath.listFiles(File::isDirectory);
-
-        if (availableInputFolders != null) {
-          if (availableInputFolders.length > 1) {
-            Dialog<String> selectPrefixDialog = new Dialog<>();
-            selectPrefixDialog.setTitle("Select Prefix");
-
-            selectPrefixDialog.getDialogPane().getButtonTypes().add(ButtonType.APPLY);
-
-            ListView<String> prefixListView = new ListView<>();
-            prefixListView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-            for (File availableInputFolder : availableInputFolders) {
-              prefixListView.getItems().add(availableInputFolder.getName());
-            }
-
-            selectPrefixDialog.getDialogPane().setContent(prefixListView);
-
-            selectPrefixDialog.setResultConverter(
-                dialogButton -> prefixListView.getSelectionModel().getSelectedItem());
-
-            Optional<String> result = selectPrefixDialog.showAndWait();
-            if (result.isPresent()) {
-              prefix = result.get();
-            }
-          } else if (availableInputFolders.length == 1) {
-            prefix = availableInputFolders[0].getName();
-          }
-        }
-      } else {
-        logger.error("Input folder not found!");
-      }
-
-      return Optional.of(new Pair<>(path, prefix));
-
-    } else {
-      return Optional.empty();
-    }
-  }
-
-  public void saveGridAsCsv(File saveFolderPath) {
-    IoDialogs.csvFileSeparatorDialog()
-        .showAndWait()
-        .ifPresent(
-            csvSeparator ->
-                // issue an event that we want to save,
-                // the listener provided is a one-shot instance which fires when the
-                // gridController returns
-                notifyListener(
-                    new SaveGridEvent(
-                        (observable, oldValue, gridContainer) -> {
-
-                          // create a new csv file sink
-                          CsvFileSink csvFileSink =
-                              new CsvFileSink(
-                                  saveFolderPath.getAbsolutePath(),
-                                  new ProcessorProvider(),
-                                  new FileNamingStrategy(),
-                                  false,
-                                  csvSeparator);
-
-                          if (gridContainer instanceof JointGridContainer) {
-                            csvFileSink.persistJointGrid((JointGridContainer) gridContainer);
-                          } else if (gridContainer instanceof SubGridContainer) {
-                            csvFileSink.persistAll(gridContainer.allEntitiesAsList());
-                          } else {
-                            throw new IoControllerException(
-                                "Cannot persist unknown grid container: " + gridContainer);
-                          }
-                        })));
+              if (gridContainer instanceof JointGridContainer) {
+                csvFileSink.persistJointGrid((JointGridContainer) gridContainer);
+              } else if (gridContainer instanceof SubGridContainer) {
+                csvFileSink.persistAll(gridContainer.allEntitiesAsList());
+              } else {
+                throw new IoControllerException(
+                    "Cannot persist unknown grid container: " + gridContainer);
+              }
+            }));
   }
 
   private void notifyListener(IOEvent ioEvent) {

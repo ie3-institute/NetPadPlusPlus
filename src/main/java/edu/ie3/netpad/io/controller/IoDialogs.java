@@ -22,7 +22,7 @@ import javafx.stage.DirectoryChooser;
  */
 public class IoDialogs {
 
-  protected static Dialog<String> csvFileSeparatorDialog() {
+  public static Dialog<String> csvFileSeparatorDialog() {
 
     GridPane gridPane = new GridPane();
     gridPane.setHgap(10);

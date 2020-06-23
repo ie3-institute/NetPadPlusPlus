@@ -7,10 +7,14 @@ package edu.ie3.netpad.menu;
 
 import edu.ie3.netpad.io.controller.IoController;
 import edu.ie3.netpad.io.controller.IoDialogs;
+import java.io.File;
+import java.util.Optional;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.stage.DirectoryChooser;
 
 /**
  * //ToDo: Class Description
@@ -46,8 +50,16 @@ public class FileMenuController {
     // initialize all currently activated menu items
     loadGridInputModelCsvItem.setOnAction(
         event ->
-            IoController.getInstance()
-                .loadGridFromCsv(menuBar.getScene())
+            // create and open directory chooser and get grid
+            getFilePathFromDirChooser(menuBar.getScene())
+                .flatMap(
+                    absoluteFilePath ->
+                        IoDialogs.csvFileSeparatorDialog()
+                            .showAndWait()
+                            .map(
+                                csvSeparator ->
+                                    IoController.getInstance()
+                                        .loadGridFromCsv(absoluteFilePath, csvSeparator)))
                 .ifPresent(ignored -> activateSaveButton()));
     createSampleGridInputModelItem.setOnAction(
         event ->
@@ -57,12 +69,27 @@ public class FileMenuController {
     saveGridCsvItem.setOnAction(
         event ->
             IoDialogs.chooseDir("Save grid in folder", menuBar.getScene())
-                .ifPresent(IoController.getInstance()::saveGridAsCsv));
+                .ifPresent(
+                    saveFolderPath ->
+                        IoDialogs.csvFileSeparatorDialog()
+                            .showAndWait()
+                            .ifPresent(
+                                csvSeparator ->
+                                    IoController.getInstance()
+                                        .saveGridAsCsv(saveFolderPath, csvSeparator))));
+
     exitItem.setOnAction(event -> System.exit(0));
   }
 
   private void activateSaveButton() {
     saveGrid.setDisable(false);
     saveGridCsvItem.setDisable(false);
+  }
+
+  private Optional<File> getFilePathFromDirChooser(Scene scene) {
+    DirectoryChooser directoryChooser = new DirectoryChooser();
+    directoryChooser.setTitle("Load GridInputModel from CSV");
+
+    return Optional.ofNullable(directoryChooser.showDialog(scene.getWindow()));
   }
 }

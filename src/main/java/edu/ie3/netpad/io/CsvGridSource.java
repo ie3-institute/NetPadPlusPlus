@@ -11,6 +11,7 @@ import edu.ie3.datamodel.models.input.container.GraphicElements;
 import edu.ie3.datamodel.models.input.container.JointGridContainer;
 import edu.ie3.datamodel.models.input.container.RawGridElements;
 import edu.ie3.datamodel.models.input.container.SystemParticipants;
+import java.util.Optional;
 
 /**
  * //ToDo: Class Description
@@ -47,24 +48,19 @@ public class CsvGridSource {
             csvSep, baseFolder, csvFileNamingStrategy, csvTypeSource, csvRawGridSource);
   }
 
-  public JointGridContainer getGrid() {
-    final RawGridElements rawGridElements =
-        csvRawGridSource
-            .getGridData()
-            .orElseThrow(
-                () -> new RuntimeException("Error while trying to read new RawGridElements!"));
-    final SystemParticipants systemParticipants =
-        csvSystemParticipantSource
-            .getSystemParticipants()
-            .orElseThrow(
-                () -> new RuntimeException("Error while trying to read new SystemParticipants!"));
-    final GraphicElements graphicElements =
-        csvGraphicSource
-            .getGraphicElements()
-            .orElseThrow(
-                () -> new RuntimeException("Error while trying to read new GraphicElements!"));
+  public Optional<JointGridContainer> getGrid() {
+    final Optional<RawGridElements> rawGridElements = csvRawGridSource.getGridData();
+    final Optional<SystemParticipants> systemParticipants =
+        csvSystemParticipantSource.getSystemParticipants();
+    final Optional<GraphicElements> graphicElements = csvGraphicSource.getGraphicElements();
 
-    /* Call the constructor, that is calling several checks by itself */
-    return new JointGridContainer(gridName, rawGridElements, systemParticipants, graphicElements);
+    if (rawGridElements.isPresent()
+        && systemParticipants.isPresent()
+        && graphicElements.isPresent())
+      return Optional.of(
+          new JointGridContainer(
+              gridName, rawGridElements.get(), systemParticipants.get(), graphicElements.get()));
+
+    return Optional.empty();
   }
 }
