@@ -21,20 +21,18 @@ import edu.ie3.datamodel.models.input.container.SystemParticipants;
 public class CsvGridSource {
 
   private static final FileNamingStrategy csvFileNamingStrategy = new FileNamingStrategy();
-  private final CsvTypeSource csvTypeSource;
   private final CsvRawGridSource csvRawGridSource;
   private final CsvSystemParticipantSource csvSystemParticipantSource;
   private final CsvGraphicSource csvGraphicSource;
-  private final CsvThermalSource csvThermalSource;
 
   private final String gridName;
 
   public CsvGridSource(String baseFolder, String gridName, String csvSep) {
     this.gridName = gridName;
-    this.csvTypeSource = new CsvTypeSource(csvSep, baseFolder, csvFileNamingStrategy);
+    CsvTypeSource csvTypeSource = new CsvTypeSource(csvSep, baseFolder, csvFileNamingStrategy);
     this.csvRawGridSource =
         new CsvRawGridSource(csvSep, baseFolder, csvFileNamingStrategy, csvTypeSource);
-    this.csvThermalSource =
+    CsvThermalSource csvThermalSource =
         new CsvThermalSource(csvSep, baseFolder, csvFileNamingStrategy, csvTypeSource);
     this.csvSystemParticipantSource =
         new CsvSystemParticipantSource(
