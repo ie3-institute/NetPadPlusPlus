@@ -185,8 +185,7 @@ public class SampleGridFactory {
             operationTime,
             participantNode,
             cosPhiFixed,
-            storageTypeInput,
-            "market");
+            storageTypeInput);
 
     return new SystemParticipants(
         Collections.emptySet(),
