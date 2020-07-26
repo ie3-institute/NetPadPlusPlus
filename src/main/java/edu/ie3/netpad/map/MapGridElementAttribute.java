@@ -7,10 +7,7 @@ package edu.ie3.netpad.map;
 
 import edu.ie3.datamodel.models.UniqueEntity;
 import edu.ie3.datamodel.models.input.NodeInput;
-import edu.ie3.datamodel.models.input.system.LoadInput;
-import edu.ie3.datamodel.models.input.system.PvInput;
-import edu.ie3.datamodel.models.input.system.StorageInput;
-import edu.ie3.datamodel.models.input.system.WecInput;
+import edu.ie3.datamodel.models.input.system.*;
 import javafx.scene.paint.Color;
 
 /**
@@ -24,7 +21,8 @@ public enum MapGridElementAttribute {
   PV(PvInput.class, "Photovoltaic", Color.GREEN),
   LOAD(LoadInput.class, "Load", Color.DARKMAGENTA),
   WEC(WecInput.class, "Wec", Color.CADETBLUE),
-  STORAGE(StorageInput.class, "Storage", Color.CHOCOLATE);
+  STORAGE(StorageInput.class, "Storage", Color.CHOCOLATE),
+  EV_CS(EvcsInput.class, "EvChargingStation", Color.MAGENTA);
 
   private final Class<? extends UniqueEntity> clz;
   private final String id;

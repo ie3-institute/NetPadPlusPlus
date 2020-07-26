@@ -22,6 +22,7 @@ import edu.ie3.datamodel.models.input.container.GraphicElements;
 import edu.ie3.datamodel.models.input.container.JointGridContainer;
 import edu.ie3.datamodel.models.input.container.RawGridElements;
 import edu.ie3.datamodel.models.input.container.SystemParticipants;
+import edu.ie3.datamodel.models.input.system.EvcsInput;
 import edu.ie3.datamodel.models.input.system.LoadInput;
 import edu.ie3.datamodel.models.input.system.PvInput;
 import edu.ie3.datamodel.models.input.system.StorageInput;
@@ -140,6 +141,16 @@ public class SampleGridFactory {
             sRated,
             cosPhiRated);
 
+    // Evcs
+    final EvcsInput evcsInput =
+        new EvcsInput(
+            UUID.fromString("d56f15b7-8293-4b98-b5bd-58f6273ce239"),
+            "test_pvInput",
+            operator,
+            operationTime,
+            participantNode,
+            cosPhiFixed);
+
     final LoadInput loadInput1 =
         new LoadInput(
             UUID.fromString("eaf77f7e-9001-479f-94ca-7fb657766f6f"),
@@ -190,7 +201,7 @@ public class SampleGridFactory {
     return new SystemParticipants(
         Collections.emptySet(),
         Collections.emptySet(),
-        Collections.emptySet(),
+        Collections.singleton(evcsInput),
         Collections.emptySet(),
         Collections.emptySet(),
         Collections.emptySet(),
