@@ -5,17 +5,16 @@
 */
 package edu.ie3.netpad.grid.context.dialog;
 
-import edu.ie3.datamodel.io.processor.input.InputEntityProcessor;
 import edu.ie3.datamodel.models.input.AssetInput;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Collectors;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.util.Callback;
 
@@ -55,20 +54,64 @@ abstract class DialogProvider {
     List<Node> nodes = gridPane.getChildren();
     for (int i = 0; i + 1 < nodes.size(); i = i + 2) {
       updatedFieldsToValuesAfterClick.put(
-          ((Label) nodes.get(i)).getText(), ((TextField) nodes.get(i + 1)).getText());
+          ((Label) nodes.get(i)).getText(), getControlContent(nodes.get(i + 1)));
     }
     return updatedFieldsToValuesAfterClick;
   }
 
-  protected static Optional<LinkedHashMap<String, String>> getFieldsToAttributes(
-      AssetInput inputEntity) {
-    InputEntityProcessor inputEntityProcessor = new InputEntityProcessor(inputEntity.getClass());
-    return inputEntityProcessor.handleEntity(inputEntity);
+  protected static String getControlContent(Node n) {
+    String res =
+        ""; // todo better return optional and throw exception, this hides error and causes an
+    // update with invalid data
+    if (n instanceof TextField) res = ((TextField) n).getText();
+    if (n instanceof Spinner) res = ((Spinner) n).getValue().toString();
+
+    return res;
   }
 
-  protected static GridPane getAssetInputEditGridPane(Map<String, String> fieldsToAttributes) {
+  // todo restrict min/max boundaries and increment/decrement step size based on field name
+  protected static Map<String, Control> getFieldsToAttributes(AssetInput inputEntity) {
+    final DialogInputEntityProcessor inputEntityProcessor =
+        new DialogInputEntityProcessor(inputEntity.getClass());
+    return inputEntityProcessor.mapFieldNameToGetter().entrySet().stream()
+        .map(
+            fieldNameToGetter -> {
+              Control res;
+              try {
+                Method getter = fieldNameToGetter.getValue();
+                res =
+                    Optional.ofNullable(getter.invoke(inputEntity))
+                        .map(
+                            methodReturnObj -> {
+                              switch (getter.getReturnType().getSimpleName()) {
+                                case "int":
+                                  return new Spinner<>(
+                                      Integer.MIN_VALUE,
+                                      Integer.MAX_VALUE,
+                                      (Integer) methodReturnObj);
+                                case "double":
+                                  return new Spinner<>(
+                                      Double.MIN_VALUE, Double.MAX_VALUE, (Double) methodReturnObj);
+                                case "String":
+                                default:
+                                  return new TextField(
+                                      inputEntityProcessor.processMethodResult(
+                                          methodReturnObj, getter, fieldNameToGetter.getKey()));
+                              }
+                            })
+                        .orElseGet(() -> new TextField(""));
+              } catch (IllegalAccessException | InvocationTargetException e) {
+                res = new TextField("");
+              }
+              return new AbstractMap.SimpleEntry<>(fieldNameToGetter.getKey(), res);
+            })
+        .collect(
+            Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue));
+  }
 
-    List<String> enabledFields = Collections.singletonList("id");
+  protected static GridPane getAssetInputEditGridPane(Map<String, Control> fieldsToAttributes) {
+
+    List<String> enabledFields = Arrays.asList("id", "cosphirated");
 
     // Create the grid pane, that holds all contents
     GridPane gridPane = new GridPane();
@@ -77,15 +120,14 @@ abstract class DialogProvider {
     gridPane.setPadding(new Insets(20, 150, 10, 10));
     final int[] rowIdx = {0};
     fieldsToAttributes.forEach(
-        (key, value) -> {
+        (key, control) -> {
           Label lbl = new Label(key);
-          TextField gridNameTextField = new TextField(value);
 
           if (!containsCaseInsensitive(lbl.getText(), enabledFields)) {
-            gridNameTextField.setDisable(true);
+            control.setDisable(true);
           }
 
-          gridPane.addRow(rowIdx[0], lbl, gridNameTextField);
+          gridPane.addRow(rowIdx[0], lbl, control);
           rowIdx[0] = rowIdx[0] + 1;
         });
 

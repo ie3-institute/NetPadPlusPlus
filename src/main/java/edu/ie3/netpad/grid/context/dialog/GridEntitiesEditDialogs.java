@@ -11,6 +11,7 @@ import edu.ie3.datamodel.models.input.NodeInput;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Control;
 import javafx.scene.control.Dialog;
 import javafx.scene.layout.GridPane;
 
@@ -26,14 +27,7 @@ public class GridEntitiesEditDialogs extends DialogProvider {
 
   public static Dialog<NodeInput> editNodeInputDialog(NodeInput node) {
 
-    Map<String, String> fieldsToValues =
-        getFieldsToAttributes(node)
-            .orElseThrow(
-                () ->
-                    new RuntimeException(
-                        "Cannot build fields to values for '"
-                            + node.getClass().getSimpleName()
-                            + "' entity."));
+    Map<String, Control> fieldsToValues = getFieldsToAttributes(node);
 
     GridPane gridPane = getAssetInputEditGridPane(fieldsToValues);
 

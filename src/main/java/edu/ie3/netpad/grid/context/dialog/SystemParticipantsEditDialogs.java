@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Control;
 import javafx.scene.control.Dialog;
 import javafx.scene.layout.GridPane;
 
@@ -30,14 +31,7 @@ public class SystemParticipantsEditDialogs extends DialogProvider {
   public static Optional<Dialog<SystemParticipantInput>> editSysPartInputDialog(
       SystemParticipantInput systemParticipantInput) {
 
-    Map<String, String> fieldsToValues =
-        getFieldsToAttributes(systemParticipantInput)
-            .orElseThrow(
-                () ->
-                    new RuntimeException(
-                        "Cannot build fields to values for '"
-                            + systemParticipantInput.getClass().getSimpleName()
-                            + "' entity."));
+    Map<String, Control> fieldsToValues = getFieldsToAttributes(systemParticipantInput);
 
     GridPane gridPane = getAssetInputEditGridPane(fieldsToValues);
 
