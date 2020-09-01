@@ -44,6 +44,11 @@ class GridControllerTest extends Specification {
 		def sampleGrid = SampleGridFactory.sampleJointGrid()
 
 		expect:
-		gridController.findSubGridUuid(validMapping, sampleGrid) == Optional.of(gridUuid)
+		sampleGrid.allEntitiesAsList().size() == validEntityList.size()
+
+		def subGridUuid = gridController.findSubGridUuid(validMapping, sampleGrid)
+
+		subGridUuid.isPresent()
+		subGridUuid == Optional.of(gridUuid)
 	}
 }
