@@ -34,7 +34,8 @@ class GridControllerTest extends Specification {
 			UUID.fromString("eaf77f7e-9001-479f-94ca-7fb657766f5f"),
 			UUID.fromString("eaf77f7e-9001-479f-94ca-7fb657766f6f"),
 			UUID.fromString("12aec637-791b-45aa-b981-b14edf171c4c"),
-			UUID.fromString("10aec636-791b-45aa-b981-b14edf171c4c")] as Set
+			UUID.fromString("10aec636-791b-45aa-b981-b14edf171c4c"),
+			UUID.fromString("d56f15b7-8293-4b98-b5bd-58f6273ce239")] as Set
 
 		def gridUuid = UUID.randomUUID()
 
