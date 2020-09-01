@@ -22,7 +22,8 @@ public enum MapGridElementAttribute {
   LOAD(LoadInput.class, "Load", Color.DARKMAGENTA),
   WEC(WecInput.class, "Wec", Color.CADETBLUE),
   STORAGE(StorageInput.class, "Storage", Color.CHOCOLATE),
-  EV_CS(EvcsInput.class, "EvChargingStation", Color.MAGENTA);
+  EV_CS(EvcsInput.class, "EvChargingStation", Color.MAGENTA),
+  FIXED_FEED_IN(FixedFeedInInput.class, "FixedFeedIn", Color.GRAY);
 
   private final Class<? extends UniqueEntity> clz;
   private final String id;
