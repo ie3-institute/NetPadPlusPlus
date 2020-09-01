@@ -5,7 +5,7 @@
 */
 package edu.ie3.netpad.util;
 
-import static edu.ie3.util.quantities.PowerSystemUnits.*;
+import static edu.ie3.util.quantities.dep.PowerSystemUnits.*;
 import static tec.uom.se.unit.Units.AMPERE;
 
 import edu.ie3.datamodel.exceptions.ParsingException;
@@ -32,10 +32,10 @@ import edu.ie3.datamodel.models.input.system.type.StorageTypeInput;
 import edu.ie3.datamodel.models.voltagelevels.GermanVoltageLevelUtils;
 import edu.ie3.datamodel.utils.GridAndGeoUtils;
 import edu.ie3.util.TimeUtil;
-import edu.ie3.util.quantities.PowerSystemUnits;
-import edu.ie3.util.quantities.interfaces.Currency;
-import edu.ie3.util.quantities.interfaces.DimensionlessRate;
-import edu.ie3.util.quantities.interfaces.EnergyPrice;
+import edu.ie3.util.quantities.dep.PowerSystemUnits;
+import edu.ie3.util.quantities.dep.interfaces.Currency;
+import edu.ie3.util.quantities.dep.interfaces.DimensionlessRate;
+import edu.ie3.util.quantities.dep.interfaces.EnergyPrice;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
