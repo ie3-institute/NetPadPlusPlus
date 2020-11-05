@@ -6,8 +6,6 @@
 package edu.ie3.netpad.util;
 
 import static edu.ie3.util.quantities.PowerSystemUnits.*;
-// import static tec.uom.se.unit.Units.AMPERE;
-
 import edu.ie3.datamodel.exceptions.ParsingException;
 import edu.ie3.datamodel.models.BdewLoadProfile;
 import edu.ie3.datamodel.models.OperationTime;
