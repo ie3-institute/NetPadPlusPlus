@@ -5,7 +5,7 @@
 */
 package edu.ie3.netpad.io;
 
-import edu.ie3.datamodel.io.FileNamingStrategy;
+import edu.ie3.datamodel.io.csv.FileNamingStrategy;
 import edu.ie3.datamodel.io.source.csv.*;
 import edu.ie3.datamodel.models.input.container.GraphicElements;
 import edu.ie3.datamodel.models.input.container.JointGridContainer;

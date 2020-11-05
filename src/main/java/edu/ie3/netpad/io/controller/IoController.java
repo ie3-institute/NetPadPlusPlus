@@ -6,7 +6,7 @@
 package edu.ie3.netpad.io.controller;
 
 import edu.ie3.datamodel.exceptions.ParsingException;
-import edu.ie3.datamodel.io.FileNamingStrategy;
+import edu.ie3.datamodel.io.csv.FileNamingStrategy;
 import edu.ie3.datamodel.io.processor.ProcessorProvider;
 import edu.ie3.datamodel.io.sink.CsvFileSink;
 import edu.ie3.datamodel.models.input.container.GridContainer;

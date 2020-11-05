@@ -5,8 +5,8 @@
 */
 package edu.ie3.netpad.util;
 
-import static edu.ie3.util.quantities.dep.PowerSystemUnits.*;
-import static tec.uom.se.unit.Units.AMPERE;
+import static edu.ie3.util.quantities.PowerSystemUnits.*;
+// import static tec.uom.se.unit.Units.AMPERE;
 
 import edu.ie3.datamodel.exceptions.ParsingException;
 import edu.ie3.datamodel.models.BdewLoadProfile;
@@ -29,25 +29,26 @@ import edu.ie3.datamodel.models.input.system.StorageInput;
 import edu.ie3.datamodel.models.input.system.characteristic.CosPhiFixed;
 import edu.ie3.datamodel.models.input.system.characteristic.OlmCharacteristicInput;
 import edu.ie3.datamodel.models.input.system.type.StorageTypeInput;
+import edu.ie3.datamodel.models.input.system.type.chargingpoint.ChargingPointTypeUtils;
 import edu.ie3.datamodel.models.voltagelevels.GermanVoltageLevelUtils;
 import edu.ie3.datamodel.utils.GridAndGeoUtils;
 import edu.ie3.util.TimeUtil;
-import edu.ie3.util.quantities.dep.PowerSystemUnits;
-import edu.ie3.util.quantities.dep.interfaces.Currency;
-import edu.ie3.util.quantities.dep.interfaces.DimensionlessRate;
-import edu.ie3.util.quantities.dep.interfaces.EnergyPrice;
+import edu.ie3.util.quantities.PowerSystemUnits;
+import edu.ie3.util.quantities.interfaces.Currency;
+import edu.ie3.util.quantities.interfaces.DimensionlessRate;
+import edu.ie3.util.quantities.interfaces.EnergyPrice;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import javax.measure.MetricPrefix;
 import javax.measure.quantity.*;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.geojson.GeoJsonReader;
-import tec.uom.se.ComparableQuantity;
-import tec.uom.se.quantity.Quantities;
-import tec.uom.se.unit.MetricPrefix;
+import tech.units.indriya.ComparableQuantity;
+import tech.units.indriya.quantity.Quantities;
 
 /**
  * //ToDo: Class Description
@@ -149,7 +150,10 @@ public class SampleGridFactory {
             operator,
             operationTime,
             participantNode,
-            cosPhiFixed);
+            cosPhiFixed,
+            ChargingPointTypeUtils.HouseholdSocket,
+            2,
+            cosPhiRated);
 
     final LoadInput loadInput1 =
         new LoadInput(

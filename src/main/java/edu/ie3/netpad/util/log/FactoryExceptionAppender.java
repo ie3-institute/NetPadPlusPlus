@@ -21,11 +21,11 @@ import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 @Plugin(name = "MapAppender", category = Core.CATEGORY_NAME, elementType = Appender.ELEMENT_TYPE)
 public class FactoryExceptionAppender extends AbstractAppender {
 
-  private ObjectProperty<FactoryException> factoryExceptionObjectProperty =
+  private final ObjectProperty<FactoryException> factoryExceptionObjectProperty =
       new SimpleObjectProperty<>();
 
   public FactoryExceptionAppender(String name, Filter filter) {
-    super(name, filter, null);
+    super(name, filter, null, true, null);
   }
 
   @PluginFactory

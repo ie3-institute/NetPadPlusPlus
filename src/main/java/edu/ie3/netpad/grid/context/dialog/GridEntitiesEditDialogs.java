@@ -41,7 +41,7 @@ public class GridEntitiesEditDialogs extends DialogProvider {
           updatedFieldValues.remove("operator");
           // actionEvent::consume prevents closing dialog on error
           new NodeInputFactory()
-              .getEntity(
+              .get(
                   new AssetInputEntityData(updatedFieldValues, NodeInput.class, node.getOperator()))
               .ifPresentOrElse(nodeInputAtomicReference::set, actionEvent::consume);
         },

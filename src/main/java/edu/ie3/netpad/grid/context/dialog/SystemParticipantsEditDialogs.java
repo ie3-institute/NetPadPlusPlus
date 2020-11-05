@@ -57,7 +57,7 @@ public class SystemParticipantsEditDialogs extends DialogProvider {
           updatedFieldValues.remove("node");
           // actionEvent::consume prevents closing dialog on error
           new LoadInputFactory()
-              .getEntity(
+              .get(
                   new NodeAssetInputEntityData(
                       updatedFieldValues,
                       LoadInput.class,
@@ -88,7 +88,7 @@ public class SystemParticipantsEditDialogs extends DialogProvider {
           updatedFieldValues.remove("node");
           // actionEvent::consume prevents closing dialog on error
           new PvInputFactory()
-              .getEntity(
+              .get(
                   new NodeAssetInputEntityData(
                       updatedFieldValues, PvInput.class, pvInput.getOperator(), pvInput.getNode()))
               .ifPresentOrElse(pvInputAtomicReference::set, actionEvent::consume);
