@@ -22,7 +22,7 @@
             <SeparatorMenuItem/>
 
             <Menu mnemonicParsing="false" text="Load GridInputModel">
-                <MenuItem fx:id="loadGridInputModelCsvItem" mnemonicParsing="false" text="from CSV ..."/>
+                <MenuItem fx:id="fromCsvItem" mnemonicParsing="false" text="from CSV ..."/>
             </Menu>
 
             <MenuItem fx:id="loadEfRuhrGridModelItem" disable="true" mnemonicParsing="false"

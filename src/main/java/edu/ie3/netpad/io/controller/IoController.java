@@ -5,16 +5,17 @@
 */
 package edu.ie3.netpad.io.controller;
 
+import edu.ie3.datamodel.exceptions.FileException;
 import edu.ie3.datamodel.exceptions.ParsingException;
+import edu.ie3.datamodel.io.csv.DefaultDirectoryHierarchy;
 import edu.ie3.datamodel.io.csv.FileNamingStrategy;
+import edu.ie3.datamodel.io.csv.HierarchicFileNamingStrategy;
 import edu.ie3.datamodel.io.processor.ProcessorProvider;
 import edu.ie3.datamodel.io.sink.CsvFileSink;
-import edu.ie3.datamodel.models.input.container.GridContainer;
-import edu.ie3.datamodel.models.input.container.JointGridContainer;
-import edu.ie3.datamodel.models.input.container.SubGridContainer;
+import edu.ie3.datamodel.io.source.csv.*;
+import edu.ie3.datamodel.models.input.container.*;
 import edu.ie3.netpad.exception.GridControllerListenerException;
 import edu.ie3.netpad.exception.IoControllerException;
-import edu.ie3.netpad.io.CsvGridSource;
 import edu.ie3.netpad.io.event.IOEvent;
 import edu.ie3.netpad.io.event.ReadGridEvent;
 import edu.ie3.netpad.io.event.SaveGridEvent;
@@ -75,26 +76,100 @@ public class IoController {
     return sampleGridOpt;
   }
 
-  public Optional<JointGridContainer> loadGridFromCsv(File absoluteFilePath, String csvSeparator) {
+  public boolean loadGridFromCsv(
+      File absoluteFilePath,
+      String csvSeparator,
+      IoDialogs.CsvImportData.DirectoryHierarchy hierarchy) {
+    /* Collect the information needed to obtain the grid structure */
+    String gridName = extractGridName(absoluteFilePath);
+    FileNamingStrategy fileNamingStrategy;
+    String baseDirectory;
+    switch (hierarchy) {
+      case FLAT:
+        baseDirectory = absoluteFilePath.toString();
+        fileNamingStrategy = new FileNamingStrategy();
+        break;
+      case HIERARCHIC:
+        baseDirectory = absoluteFilePath.toString().replaceAll(File.separator + gridName + "$", "");
+        try {
+          DefaultDirectoryHierarchy directoryHierarchy =
+              new DefaultDirectoryHierarchy(baseDirectory, gridName);
+          directoryHierarchy.validate();
+          fileNamingStrategy = new HierarchicFileNamingStrategy(directoryHierarchy);
+        } catch (FileException e) {
+          logger.error(
+              "Cannot read grid '{}', as the directory hierarchy does not comply with the specifications.",
+              gridName,
+              e);
+          return false;
+        }
+        break;
+      default:
+        logger.error("Unsupported hierarchy '{}'.", hierarchy);
+        return false;
+    }
 
-    // get the CsvGridSource
-    String gridName =
-        absoluteFilePath.getAbsolutePath()
-            .split(File.separatorChar == '\\' ? "\\\\" : File.separator)[
-            absoluteFilePath
-                    .getAbsolutePath()
-                    .split(File.separatorChar == '\\' ? "\\\\" : File.separator)
-                    .length
-                - 1];
+    /* Build the sources */
+    CsvTypeSource typeSource = new CsvTypeSource(csvSeparator, baseDirectory, fileNamingStrategy);
+    CsvRawGridSource rawGridSource =
+        new CsvRawGridSource(csvSeparator, baseDirectory, fileNamingStrategy, typeSource);
+    CsvThermalSource thermalSource =
+        new CsvThermalSource(csvSeparator, baseDirectory, fileNamingStrategy, typeSource);
+    CsvSystemParticipantSource participantSource =
+        new CsvSystemParticipantSource(
+            csvSeparator,
+            baseDirectory,
+            fileNamingStrategy,
+            typeSource,
+            thermalSource,
+            rawGridSource);
+    CsvGraphicSource graphicSource =
+        new CsvGraphicSource(
+            csvSeparator, baseDirectory, fileNamingStrategy, typeSource, rawGridSource);
 
-    // get grid and inform listeners if present
-    return new CsvGridSource(absoluteFilePath.getAbsolutePath(), gridName, csvSeparator)
-        .getGrid()
-        .map(
-            grid -> {
-              notifyListener(new ReadGridEvent(grid));
-              return grid;
-            });
+    /* Actually get the grid */
+    RawGridElements rawGrid =
+        new RawGridElements(
+            rawGridSource.getNodes(),
+            rawGridSource.getLines(),
+            rawGridSource.get2WTransformers(),
+            rawGridSource.get3WTransformers(),
+            rawGridSource.getSwitches(),
+            rawGridSource.getMeasurementUnits());
+    SystemParticipants systemParticipants =
+        new SystemParticipants(
+            participantSource.getBmPlants(),
+            participantSource.getChpPlants(),
+            participantSource.getEvCS(),
+            participantSource.getEvs(),
+            participantSource.getFixedFeedIns(),
+            participantSource.getHeatPumps(),
+            participantSource.getLoads(),
+            participantSource.getPvPlants(),
+            participantSource.getStorages(),
+            participantSource.getWecPlants());
+    GraphicElements graphicElements =
+        new GraphicElements(
+            graphicSource.getNodeGraphicInput(), graphicSource.getLineGraphicInput());
+
+    /* Return the grid and inform the interested listeners about the result */
+    JointGridContainer grid =
+        new JointGridContainer(gridName, rawGrid, systemParticipants, graphicElements);
+    notifyListener(new ReadGridEvent(grid));
+    return true;
+  }
+
+  /**
+   * Extracts the grid name as the last part of the directory path
+   *
+   * @param path Directory path
+   * @return The grid's name
+   */
+  private String extractGridName(File path) {
+    return path.getAbsolutePath()
+        .split(File.separatorChar == '\\' ? "\\\\" : File.separator)[
+        path.getAbsolutePath().split(File.separatorChar == '\\' ? "\\\\" : File.separator).length
+            - 1];
   }
 
   public void saveGridAsCsv(File saveFolderPath, String csvSeparator) {

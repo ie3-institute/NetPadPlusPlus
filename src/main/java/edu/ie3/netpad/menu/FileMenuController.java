@@ -5,16 +5,16 @@
 */
 package edu.ie3.netpad.menu;
 
+import edu.ie3.netpad.exception.NetPadPlusPlusException;
 import edu.ie3.netpad.io.controller.IoController;
 import edu.ie3.netpad.io.controller.IoDialogs;
 import java.io.File;
 import java.util.Optional;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
+import javafx.scene.control.*;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 
 /**
  * //ToDo: Class Description
@@ -27,7 +27,7 @@ public class FileMenuController {
   @FXML protected Menu fileMenu;
   @FXML private MenuItem createEmptyGridInputModelItem;
   @FXML private MenuItem createSampleGridInputModelItem;
-  @FXML private MenuItem loadGridInputModelCsvItem;
+  @FXML private MenuItem fromCsvItem;
   @FXML private MenuItem loadEfRuhrGridModelItem;
   @FXML private Menu saveGrid;
   @FXML private MenuItem saveGridCsvItem;
@@ -48,19 +48,46 @@ public class FileMenuController {
               + "Please use 'setMenuBar(...)' first!");
 
     // initialize all currently activated menu items
-    loadGridInputModelCsvItem.setOnAction(
+    fromCsvItem.setOnAction(
         event ->
-            // create and open directory chooser and get grid
-            getFilePathFromDirChooser(menuBar.getScene())
+            IoDialogs.csvImportDialog()
+                .showAndWait()
                 .flatMap(
-                    absoluteFilePath ->
-                        IoDialogs.csvFileSeparatorDialog()
-                            .showAndWait()
-                            .map(
-                                csvSeparator ->
-                                    IoController.getInstance()
-                                        .loadGridFromCsv(absoluteFilePath, csvSeparator)))
-                .ifPresent(ignored -> activateSaveButton()));
+                    csvImportData -> {
+                      Optional<Boolean> maybeSuccess;
+                      switch (csvImportData.getSource()) {
+                        case ARCHIVE:
+                          maybeSuccess = Optional.of(false);
+                          break;
+                        case DIRECTORY:
+                          maybeSuccess =
+                              getPathFromDirChooser(menuBar.getScene())
+                                  .map(
+                                      absoluteDirectoryPath ->
+                                          IoController.getInstance()
+                                              .loadGridFromCsv(
+                                                  absoluteDirectoryPath,
+                                                  csvImportData.getCsvSeparator(),
+                                                  csvImportData.getHierarchy()));
+                          break;
+                        default:
+                          throw new NetPadPlusPlusException(
+                              "Unable to handle csv source '" + csvImportData.getSource() + "'");
+                      }
+                      return maybeSuccess;
+                    })
+                .ifPresent(
+                    success -> {
+                      if (success) activateSaveButton();
+                      else {
+                        Alert alert =
+                            new Alert(
+                                Alert.AlertType.ERROR,
+                                "Unable to read grid. Check your import settings.",
+                                ButtonType.OK);
+                        alert.show();
+                      }
+                    }));
     createSampleGridInputModelItem.setOnAction(
         event ->
             IoController.getInstance()
@@ -86,10 +113,20 @@ public class FileMenuController {
     saveGridCsvItem.setDisable(false);
   }
 
-  private Optional<File> getFilePathFromDirChooser(Scene scene) {
+  private Optional<File> getPathFromDirChooser(Scene scene) {
     DirectoryChooser directoryChooser = new DirectoryChooser();
     directoryChooser.setTitle("Load GridInputModel from CSV");
 
     return Optional.ofNullable(directoryChooser.showDialog(scene.getWindow()));
+  }
+
+  private Optional<File> getPathFromFileChooser(Scene scene) {
+    FileChooser fileChooser = new FileChooser();
+    FileChooser.ExtensionFilter extensionFilter =
+        new FileChooser.ExtensionFilter("Archive files (*.tar.gz)", "*.tar.gz");
+    fileChooser.getExtensionFilters().add(extensionFilter);
+    fileChooser.setTitle("Load GridInputModel from CSV");
+
+    return Optional.ofNullable(fileChooser.showOpenDialog(scene.getWindow()));
   }
 }
