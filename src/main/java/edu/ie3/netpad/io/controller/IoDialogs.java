@@ -22,6 +22,10 @@ import javafx.stage.DirectoryChooser;
  */
 public class IoDialogs {
 
+  public IoDialogs() {
+    throw new IllegalStateException("Utility class");
+  }
+
   public static Dialog<String> csvFileSeparatorDialog() {
 
     GridPane gridPane = new GridPane();

@@ -6,7 +6,7 @@
 package edu.ie3.netpad.io.controller;
 
 import edu.ie3.datamodel.exceptions.ParsingException;
-import edu.ie3.datamodel.io.FileNamingStrategy;
+import edu.ie3.datamodel.io.csv.FileNamingStrategy;
 import edu.ie3.datamodel.io.processor.ProcessorProvider;
 import edu.ie3.datamodel.io.sink.CsvFileSink;
 import edu.ie3.datamodel.models.input.container.GridContainer;
@@ -25,8 +25,6 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import org.locationtech.jts.io.ParseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * //ToDo: Class Description
@@ -35,8 +33,6 @@ import org.slf4j.LoggerFactory;
  * @since 15.05.20
  */
 public class IoController {
-
-  private static final Logger logger = LoggerFactory.getLogger(IoController.class);
 
   private static final ObjectProperty<IOEvent> ioEventProperty = new SimpleObjectProperty<>();
   private boolean initialized;
