@@ -17,6 +17,10 @@ import javafx.scene.control.TextField;
  */
 public class FxUtil {
 
+  public FxUtil() {
+    throw new IllegalStateException("Utility class");
+  }
+
   public static void addTextLimiter(final TextField tf, final int maxLength) {
     tf.textProperty()
         .addListener(
