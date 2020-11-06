@@ -4,9 +4,9 @@
 - Johannes Hiry
 
 ### Main Contributers:
-- Johannes Hiry - https://github.com/johanneshiry
-- Chris Kittl - https://github.com/ckittl
+- [Johannes Hiry](https://github.com/johanneshiry)
+- [Chris Kittl](https://github.com/ckittl)
 - Christian Mahr
 
 ### Coordination:
-- Johannes Hiry
+- [Johannes Hiry](https://github.com/johanneshiry)

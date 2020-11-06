@@ -143,7 +143,7 @@ public class GridPaintLayer extends MapLayer {
 
       paintElement(node.getUuid(), gridNodeGraphic);
 
-      log.info("Added node {}", node.getId());
+      log.trace("Added node {}", node.getId());
     } else {
       throw gridPaintLayerException(node);
     }
@@ -157,7 +157,7 @@ public class GridPaintLayer extends MapLayer {
 
       paintElement(line.getUuid(), lineGraphic);
 
-      log.info("Added line {}", line.getId());
+      log.trace("Added line {}", line.getId());
     } else {
       throw gridPaintLayerException(line);
     }
@@ -177,7 +177,7 @@ public class GridPaintLayer extends MapLayer {
 
       paintElement(transformer2WInput.getUuid(), trafo2WGraphic);
 
-      log.info("Added transformer {}", transformer2WInput.getUuid());
+      log.trace("Added transformer {}", transformer2WInput.getUuid());
 
     } else {
       throw gridPaintLayerException(transformer2WInput);
