@@ -57,7 +57,15 @@ public class FileMenuController {
                       Optional<Boolean> maybeSuccess;
                       switch (csvImportData.getSource()) {
                         case ARCHIVE:
-                          maybeSuccess = Optional.of(false);
+                          maybeSuccess =
+                              getPathFromFileChooser(menuBar.getScene())
+                                  .map(
+                                      absoluteDirectoryPath ->
+                                          IoController.getInstance()
+                                              .loadGridFromArchive(
+                                                  absoluteDirectoryPath,
+                                                  csvImportData.getCsvSeparator(),
+                                                  csvImportData.getHierarchy()));
                           break;
                         case DIRECTORY:
                           maybeSuccess =

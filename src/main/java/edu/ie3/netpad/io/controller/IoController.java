@@ -7,6 +7,7 @@ package edu.ie3.netpad.io.controller;
 
 import edu.ie3.datamodel.exceptions.FileException;
 import edu.ie3.datamodel.exceptions.ParsingException;
+import edu.ie3.datamodel.io.TarballUtils;
 import edu.ie3.datamodel.io.csv.DefaultDirectoryHierarchy;
 import edu.ie3.datamodel.io.csv.FileNamingStrategy;
 import edu.ie3.datamodel.io.csv.HierarchicFileNamingStrategy;
@@ -20,7 +21,11 @@ import edu.ie3.netpad.io.event.IOEvent;
 import edu.ie3.netpad.io.event.ReadGridEvent;
 import edu.ie3.netpad.io.event.SaveGridEvent;
 import edu.ie3.netpad.util.SampleGridFactory;
+import edu.ie3.util.io.FileIOUtils;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Optional;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -76,6 +81,49 @@ public class IoController {
     return sampleGridOpt;
   }
 
+  public boolean loadGridFromArchive(
+      File absoluteArchivePath,
+      String csvSeparator,
+      IoDialogs.CsvImportData.DirectoryHierarchy hierarchy) {
+    /* Create a temp directory */
+    Path tmpDirectory;
+    try {
+      tmpDirectory = Files.createTempDirectory("");
+    } catch (IOException e) {
+      logger.error("Cannot read from archive, as temp directory creation failed.", e);
+      return false;
+    }
+
+    /* Extract the content of the tarball */
+    Path folderPath;
+    try {
+      folderPath = TarballUtils.extract(absoluteArchivePath.toPath(), tmpDirectory, false);
+    } catch (FileException e) {
+      logger.error("Cannot read from archive, as extraction failed.", e);
+      return false;
+    }
+
+    /* Get the grid from the extracted folder */
+    boolean result = loadGridFromCsv(folderPath.toFile(), csvSeparator, hierarchy);
+
+    /* Clean up the temp directory */
+    try {
+      FileIOUtils.deleteRecursively(folderPath);
+    } catch (IOException e) {
+      logger.warn("Cleaning up of temp directory '{}' failed.", tmpDirectory, e);
+    }
+
+    return result;
+  }
+
+  /**
+   * Load the grid model from a directory, utilizing the given hierarchy information.
+   *
+   * @param absoluteFilePath Absolute path to the base directory of the data set
+   * @param csvSeparator Csv column separator to use
+   * @param hierarchy Information about the underlying directory hierarchy
+   * @return true, if the grid has been read successfully, false otherwise
+   */
   public boolean loadGridFromCsv(
       File absoluteFilePath,
       String csvSeparator,
