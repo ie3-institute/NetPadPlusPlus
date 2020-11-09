@@ -5,7 +5,6 @@
  */
 package edu.ie3.netpad.io.controller
 
-import edu.ie3.datamodel.io.TarballUtils
 import edu.ie3.datamodel.models.input.container.GridContainer
 import edu.ie3.datamodel.models.input.container.JointGridContainer
 import edu.ie3.netpad.io.event.IOEvent
@@ -14,14 +13,16 @@ import edu.ie3.netpad.util.SampleGridFactory
 import edu.ie3.util.io.FileIOUtils
 import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
+import org.apache.commons.compress.archivers.ArchiveEntry
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.commons.io.FilenameUtils
 import spock.lang.Shared
 import spock.lang.Specification
 
 import java.nio.file.Files
-import java.nio.file.Paths
 import java.util.stream.Collectors
 import java.util.stream.Stream
+import java.util.zip.GZIPInputStream
 
 class IoControllerTest extends Specification {
 	@Shared
@@ -33,10 +34,14 @@ class IoControllerTest extends Specification {
 	@Shared
 	JointGridContainer sampleGrid
 
+	@Shared
+	IoController ioController
+
 	def setupSpec() {
 		testFileFolder = this.getClass().getResource("/testFiles").toString().replaceAll("^file:/", "")
 		ioListener = new IoEventListener()
-		IoController.instance.registerGridControllerListener(ioListener)
+		ioController = new IoController()
+		ioController.registerGridControllerListener(ioListener)
 
 		sampleGrid = SampleGridFactory.sampleJointGrid()
 	}
@@ -50,7 +55,7 @@ class IoControllerTest extends Specification {
 		def flatDirectory = new File(FilenameUtils.concat(testFileFolder, "flat"))
 
 		when:
-		def actual = IoController.instance.loadGridFromDirectory(flatDirectory, ";", IoDialogs.CsvIoData.DirectoryHierarchy.FLAT)
+		def actual = ioController.loadGridFromDirectory(flatDirectory, ";", IoDialogs.CsvIoData.DirectoryHierarchy.FLAT)
 
 		then:
 		actual == true
@@ -69,7 +74,7 @@ class IoControllerTest extends Specification {
 		def flatDirectory = new File(FilenameUtils.concat(testFileFolder, "hierarchicCorrupt"))
 
 		when:
-		def actual = IoController.instance.loadGridFromDirectory(flatDirectory, ";", IoDialogs.CsvIoData.DirectoryHierarchy.HIERARCHIC)
+		def actual = ioController.loadGridFromDirectory(flatDirectory, ";", IoDialogs.CsvIoData.DirectoryHierarchy.HIERARCHIC)
 
 		then:
 		actual == false
@@ -81,7 +86,7 @@ class IoControllerTest extends Specification {
 		def flatDirectory = new File(FilenameUtils.concat(testFileFolder, "hierarchic"))
 
 		when:
-		def actual = IoController.instance.loadGridFromDirectory(flatDirectory, ";", IoDialogs.CsvIoData.DirectoryHierarchy.HIERARCHIC)
+		def actual = ioController.loadGridFromDirectory(flatDirectory, ";", IoDialogs.CsvIoData.DirectoryHierarchy.HIERARCHIC)
 
 		then:
 		actual == true
@@ -100,7 +105,7 @@ class IoControllerTest extends Specification {
 		def archive = new File(FilenameUtils.concat(testFileFolder, "flat.tar.gz"))
 
 		when:
-		def actual = IoController.instance.loadGridFromArchive(archive, ";", IoDialogs.CsvIoData.DirectoryHierarchy.FLAT)
+		def actual = ioController.loadGridFromArchive(archive, ";", IoDialogs.CsvIoData.DirectoryHierarchy.FLAT)
 
 		then:
 		actual == true
@@ -119,7 +124,7 @@ class IoControllerTest extends Specification {
 		def archive = new File(FilenameUtils.concat(testFileFolder, "hierarchic.tar.gz"))
 
 		when:
-		def actual = IoController.instance.loadGridFromArchive(archive, ";", IoDialogs.CsvIoData.DirectoryHierarchy.HIERARCHIC)
+		def actual = ioController.loadGridFromArchive(archive, ";", IoDialogs.CsvIoData.DirectoryHierarchy.HIERARCHIC)
 
 		then:
 		actual == true
@@ -146,12 +151,13 @@ class IoControllerTest extends Specification {
 			FilenameUtils.concat(tmpDirectory, "pv_input.csv"),
 			FilenameUtils.concat(tmpDirectory, "load_input.csv"),
 			FilenameUtils.concat(tmpDirectory, "evcs_input.csv"),
-			FilenameUtils.concat(tmpDirectory, "storage_input.csv")
+			FilenameUtils.concat(tmpDirectory, "storage_input.csv"),
+			FilenameUtils.concat(tmpDirectory, "storage_type_input.csv")
 		]
 
 		when:
 		try {
-			IoController.instance.saveGridToCsv(tmpDirectory, sampleGrid, IoDialogs.CsvIoData.DirectoryHierarchy.FLAT, ";")
+			ioController.saveGridToCsv(tmpDirectory, sampleGrid, IoDialogs.CsvIoData.DirectoryHierarchy.FLAT, ";")
 		} catch (Exception e) {
 			FileIOUtils.deleteRecursively(tmpDirectory)
 			throw e
@@ -182,12 +188,13 @@ class IoControllerTest extends Specification {
 			Stream.of(tmpDirectory, "sampleGrid", "input", "participants", "pv_input.csv").collect(Collectors.joining(File.separator)),
 			Stream.of(tmpDirectory, "sampleGrid", "input", "participants", "load_input.csv").collect(Collectors.joining(File.separator)),
 			Stream.of(tmpDirectory, "sampleGrid", "input", "participants", "evcs_input.csv").collect(Collectors.joining(File.separator)),
-			Stream.of(tmpDirectory, "sampleGrid", "input", "participants", "storage_input.csv").collect(Collectors.joining(File.separator))
+			Stream.of(tmpDirectory, "sampleGrid", "input", "participants", "storage_input.csv").collect(Collectors.joining(File.separator)),
+			Stream.of(tmpDirectory, "sampleGrid", "input", "global", "storage_type_input.csv").collect(Collectors.joining(File.separator))
 		]
 
 		when:
 		try {
-			IoController.instance.saveGridToCsv(tmpDirectory, sampleGrid, IoDialogs.CsvIoData.DirectoryHierarchy.HIERARCHIC, ";")
+			ioController.saveGridToCsv(tmpDirectory, sampleGrid, IoDialogs.CsvIoData.DirectoryHierarchy.HIERARCHIC, ";")
 		} catch (Exception e) {
 			FileIOUtils.deleteRecursively(tmpDirectory)
 			throw e
@@ -210,21 +217,22 @@ class IoControllerTest extends Specification {
 		def tmpDirectory = Files.createTempDirectory("flat_compressed").toAbsolutePath().toString()
 		def expectedArchiveFile = new File(FilenameUtils.concat(tmpDirectory, "sampleGrid.tar.gz"))
 		def expectedDirectories = [
-			FilenameUtils.concat(tmpDirectory, "operator_input.csv"),
-			FilenameUtils.concat(tmpDirectory, "node_input.csv"),
-			FilenameUtils.concat(tmpDirectory, "line_input.csv"),
-			FilenameUtils.concat(tmpDirectory, "line_type_input.csv"),
-			FilenameUtils.concat(tmpDirectory, "transformer_2_w_input.csv"),
-			FilenameUtils.concat(tmpDirectory, "transformer_2_w_type_input.csv"),
-			FilenameUtils.concat(tmpDirectory, "pv_input.csv"),
-			FilenameUtils.concat(tmpDirectory, "load_input.csv"),
-			FilenameUtils.concat(tmpDirectory, "evcs_input.csv"),
-			FilenameUtils.concat(tmpDirectory, "storage_input.csv")
+			"operator_input.csv",
+			"node_input.csv",
+			"line_input.csv",
+			"line_type_input.csv",
+			"transformer_2_w_input.csv",
+			"transformer_2_w_type_input.csv",
+			"pv_input.csv",
+			"load_input.csv",
+			"evcs_input.csv",
+			"storage_input.csv",
+			"storage_type_input.csv"
 		]
 
 		when: "saving the archive"
 		try {
-			IoController.instance.saveGridCompressed(tmpDirectory, sampleGrid, IoDialogs.CsvIoData.DirectoryHierarchy.FLAT, ";")
+			ioController.saveGridCompressed(tmpDirectory, sampleGrid, IoDialogs.CsvIoData.DirectoryHierarchy.FLAT, ";")
 		} catch (Exception e) {
 			FileIOUtils.deleteRecursively(tmpDirectory)
 			throw e
@@ -235,22 +243,21 @@ class IoControllerTest extends Specification {
 		expectedArchiveFile.exists()
 		expectedArchiveFile.isFile()
 
-		when: "extracting the given archive"
-		try {
-			TarballUtils.extract(Paths.get(expectedArchiveFile.absolutePath), Paths.get(tmpDirectory), false)
-		} catch (Exception e) {
-			FileIOUtils.deleteRecursively(tmpDirectory)
-			throw e
+		and: "the contains the correct entries"
+		def actualEntries = []
+		def tarInputStream = new TarArchiveInputStream(new GZIPInputStream(new FileInputStream(expectedArchiveFile)))
+
+		ArchiveEntry archiveEntry
+		while ((archiveEntry = tarInputStream.getNextEntry()) != null) {
+			actualEntries.add(archiveEntry.getName())
 		}
 
-		then: "all expected files are apparent"
-		expectedDirectories.each { filePath ->
-			def file = new File(filePath)
-			assert file.exists()
-			assert file.isFile()
-		}
+		actualEntries.size() == expectedDirectories.size()
+		actualEntries.containsAll(expectedDirectories)
 
 		cleanup:
+		tarInputStream.close()
+
 		FileIOUtils.deleteRecursively(tmpDirectory)
 	}
 
@@ -258,23 +265,23 @@ class IoControllerTest extends Specification {
 		given:
 		def tmpDirectory = Files.createTempDirectory("hierarchic_compressed").toAbsolutePath().toString()
 		def expectedArchiveFile = new File(FilenameUtils.concat(tmpDirectory, "sampleGrid.tar.gz"))
-		/* The part "sampleGrid" appears twice, because the TarballUtils adds a directory with the archive name by default */
 		def expectedDirectories = [
-			Stream.of(tmpDirectory, "sampleGrid", "sampleGrid", "input", "global", "operator_input.csv").collect(Collectors.joining(File.separator)),
-			Stream.of(tmpDirectory, "sampleGrid", "sampleGrid", "input", "grid", "node_input.csv").collect(Collectors.joining(File.separator)),
-			Stream.of(tmpDirectory, "sampleGrid", "sampleGrid", "input", "grid", "line_input.csv").collect(Collectors.joining(File.separator)),
-			Stream.of(tmpDirectory, "sampleGrid", "sampleGrid", "input", "global", "line_type_input.csv").collect(Collectors.joining(File.separator)),
-			Stream.of(tmpDirectory, "sampleGrid", "sampleGrid", "input", "grid", "transformer_2_w_input.csv").collect(Collectors.joining(File.separator)),
-			Stream.of(tmpDirectory, "sampleGrid", "sampleGrid", "input", "global", "transformer_2_w_type_input.csv").collect(Collectors.joining(File.separator)),
-			Stream.of(tmpDirectory, "sampleGrid", "sampleGrid", "input", "participants", "pv_input.csv").collect(Collectors.joining(File.separator)),
-			Stream.of(tmpDirectory, "sampleGrid", "sampleGrid", "input", "participants", "load_input.csv").collect(Collectors.joining(File.separator)),
-			Stream.of(tmpDirectory, "sampleGrid", "sampleGrid", "input", "participants", "evcs_input.csv").collect(Collectors.joining(File.separator)),
-			Stream.of(tmpDirectory, "sampleGrid", "sampleGrid", "input", "participants", "storage_input.csv").collect(Collectors.joining(File.separator))
+			Stream.of("sampleGrid", "input", "global", "operator_input.csv").collect(Collectors.joining("/")),
+			Stream.of("sampleGrid", "input", "grid", "node_input.csv").collect(Collectors.joining("/")),
+			Stream.of("sampleGrid", "input", "grid", "line_input.csv").collect(Collectors.joining("/")),
+			Stream.of("sampleGrid", "input", "global", "line_type_input.csv").collect(Collectors.joining("/")),
+			Stream.of("sampleGrid", "input", "grid", "transformer_2_w_input.csv").collect(Collectors.joining("/")),
+			Stream.of("sampleGrid", "input", "global", "transformer_2_w_type_input.csv").collect(Collectors.joining("/")),
+			Stream.of("sampleGrid", "input", "participants", "pv_input.csv").collect(Collectors.joining("/")),
+			Stream.of("sampleGrid", "input", "participants", "load_input.csv").collect(Collectors.joining("/")),
+			Stream.of("sampleGrid", "input", "participants", "evcs_input.csv").collect(Collectors.joining("/")),
+			Stream.of("sampleGrid", "input", "participants", "storage_input.csv").collect(Collectors.joining("/")),
+			Stream.of("sampleGrid", "input", "global", "storage_type_input.csv").collect(Collectors.joining("/"))
 		]
 
 		when: "saving the archive"
 		try {
-			IoController.instance.saveGridCompressed(tmpDirectory, sampleGrid, IoDialogs.CsvIoData.DirectoryHierarchy.HIERARCHIC, ";")
+			ioController.saveGridCompressed(tmpDirectory, sampleGrid, IoDialogs.CsvIoData.DirectoryHierarchy.HIERARCHIC, ";")
 		} catch (Exception e) {
 			FileIOUtils.deleteRecursively(tmpDirectory)
 			throw e
@@ -285,22 +292,21 @@ class IoControllerTest extends Specification {
 		expectedArchiveFile.exists()
 		expectedArchiveFile.isFile()
 
-		when: "extracting the given archive"
-		try {
-			TarballUtils.extract(Paths.get(expectedArchiveFile.absolutePath), Paths.get(tmpDirectory), false)
-		} catch (Exception e) {
-			FileIOUtils.deleteRecursively(tmpDirectory)
-			throw e
+		and: "the contains the correct entries"
+		def actualEntries = []
+		def tarInputStream = new TarArchiveInputStream(new GZIPInputStream(new FileInputStream(expectedArchiveFile)))
+
+		ArchiveEntry archiveEntry
+		while ((archiveEntry = tarInputStream.getNextEntry()) != null) {
+			actualEntries.add(archiveEntry.getName())
 		}
 
-		then: "all expected files are apparent"
-		expectedDirectories.each { filePath ->
-			def file = new File(filePath)
-			assert file.exists()
-			assert file.isFile()
-		}
+		actualEntries.size() == expectedDirectories.size()
+		actualEntries.containsAll(expectedDirectories)
 
 		cleanup:
+		tarInputStream.close()
+
 		FileIOUtils.deleteRecursively(tmpDirectory)
 	}
 

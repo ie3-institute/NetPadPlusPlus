@@ -35,6 +35,8 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import org.apache.commons.io.FilenameUtils;
 import org.locationtech.jts.io.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * //ToDo: Class Description
@@ -43,6 +45,8 @@ import org.locationtech.jts.io.ParseException;
  * @since 15.05.20
  */
 public class IoController {
+
+  private static final Logger logger = LoggerFactory.getLogger(IoController.class);
 
   private static final ObjectProperty<IOEvent> ioEventProperty = new SimpleObjectProperty<>();
   private boolean initialized;

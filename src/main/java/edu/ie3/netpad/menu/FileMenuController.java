@@ -5,6 +5,8 @@
 */
 package edu.ie3.netpad.menu;
 
+import static edu.ie3.netpad.io.controller.IoDialogs.CsvIoData.SourceType.ARCHIVE;
+
 import edu.ie3.netpad.exception.NetPadPlusPlusException;
 import edu.ie3.netpad.io.controller.IoController;
 import edu.ie3.netpad.io.controller.IoDialogs;
@@ -15,8 +17,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
-
-import static edu.ie3.netpad.io.controller.IoDialogs.CsvIoData.SourceType.ARCHIVE;
 
 /**
  * //ToDo: Class Description

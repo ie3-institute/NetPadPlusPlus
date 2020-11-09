@@ -5,11 +5,10 @@
 */
 package edu.ie3.netpad.io.controller;
 
+import edu.ie3.netpad.exception.NetPadPlusPlusException;
 import java.io.File;
 import java.util.Objects;
 import java.util.Optional;
-
-import edu.ie3.netpad.exception.NetPadPlusPlusException;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -84,7 +83,8 @@ public class IoDialogs {
           } else if (buttonType.equals(ButtonType.CANCEL)) {
             return null;
           } else {
-            throw new NetPadPlusPlusException("Invalid button type "+ buttonType +" in csv I/O dialog.");
+            throw new NetPadPlusPlusException(
+                "Invalid button type " + buttonType + " in csv I/O dialog.");
           }
         });
 
