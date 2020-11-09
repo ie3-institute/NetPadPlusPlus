@@ -138,7 +138,9 @@ public class IoController {
         fileNamingStrategy = new FileNamingStrategy();
         break;
       case HIERARCHIC:
-        baseDirectory = absoluteFilePath.toString().replaceAll(File.separator + gridName + "$", "");
+        /* Remove the last part from the path and possibly the last File separator */
+        String regex = File.separator.equals("\\") ? "\\\\[\\w\\d-]+\\\\?$" : "/[\\w\\d-]+/?$";
+        baseDirectory = absoluteFilePath.toString().replaceAll(regex, "");
         try {
           DefaultDirectoryHierarchy directoryHierarchy =
               new DefaultDirectoryHierarchy(baseDirectory, gridName);
