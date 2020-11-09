@@ -23,6 +23,7 @@ import javafx.stage.DirectoryChooser;
  */
 public class IoDialogs {
 
+  @Deprecated
   public static Dialog<String> csvFileSeparatorDialog() {
 
     GridPane gridPane = new GridPane();
@@ -58,7 +59,17 @@ public class IoDialogs {
     return csvFileSeparatorDialog;
   }
 
-  public static Dialog<CsvImportData> csvImportDialog() {
+  /**
+   * Creates a dialog, that is used to ask the user for details on how the csv data is meant to look
+   * like in detail.
+   *
+   * @param title Window title
+   * @param directoryButtonText Button text for the directory button
+   * @param archiveButtonText Button text for the archive button
+   * @return Detailed information about the csv details as {@link CsvIoData}
+   */
+  public static Dialog<CsvIoData> csvIoDialog(
+      String title, String directoryButtonText, String archiveButtonText) {
     GridPane gridPane = new GridPane();
     gridPane.setHgap(10);
     gridPane.setVgap(10);
@@ -75,10 +86,10 @@ public class IoDialogs {
     Label hierarchyLbl = new Label("Directory hierarchy: ");
     ToggleGroup tglGrp = new ToggleGroup();
     ToggleButton flatBtn = new RadioButton("flat");
-    flatBtn.setUserData(CsvImportData.DirectoryHierarchy.FLAT);
+    flatBtn.setUserData(CsvIoData.DirectoryHierarchy.FLAT);
     flatBtn.setToggleGroup(tglGrp);
     ToggleButton hierarchicBtn = new RadioButton("hierarchic");
-    hierarchicBtn.setUserData(CsvImportData.DirectoryHierarchy.HIERARCHIC);
+    hierarchicBtn.setUserData(CsvIoData.DirectoryHierarchy.HIERARCHIC);
     hierarchicBtn.setToggleGroup(tglGrp);
     tglGrp.selectToggle(flatBtn);
     gridPane.addRow(1, hierarchyLbl, flatBtn, hierarchicBtn);
@@ -86,24 +97,24 @@ public class IoDialogs {
     DialogPane dialogPane = new DialogPane();
     dialogPane.setContent(gridPane);
 
-    ButtonType directoryButtonType = new ButtonType("From directory");
-    ButtonType archiveButtonType = new ButtonType("From archive");
+    ButtonType directoryButtonType = new ButtonType(directoryButtonText);
+    ButtonType archiveButtonType = new ButtonType(archiveButtonText);
 
     dialogPane.getButtonTypes().addAll(directoryButtonType, archiveButtonType, ButtonType.CANCEL);
 
-    Dialog<CsvImportData> csvImportDialog = new Dialog<>();
-    csvImportDialog.setTitle("Import from csv files");
+    Dialog<CsvIoData> csvImportDialog = new Dialog<>();
+    csvImportDialog.setTitle(title);
     csvImportDialog.setDialogPane(dialogPane);
 
     csvImportDialog.setResultConverter(
         buttonType -> {
           String csvSeparator = separatorCb.getSelectionModel().getSelectedItem();
-          CsvImportData.DirectoryHierarchy hierarchy =
-              ((CsvImportData.DirectoryHierarchy) tglGrp.getSelectedToggle().getUserData());
+          CsvIoData.DirectoryHierarchy hierarchy =
+              (CsvIoData.DirectoryHierarchy) tglGrp.getSelectedToggle().getUserData();
           if (buttonType.equals(directoryButtonType)) {
-            return new CsvImportData(csvSeparator, hierarchy, CsvImportData.SourceType.DIRECTORY);
+            return new CsvIoData(csvSeparator, hierarchy, CsvIoData.SourceType.DIRECTORY);
           } else if (buttonType.equals(archiveButtonType)) {
-            return new CsvImportData(csvSeparator, hierarchy, CsvImportData.SourceType.ARCHIVE);
+            return new CsvIoData(csvSeparator, hierarchy, CsvIoData.SourceType.ARCHIVE);
           } else {
             return null;
           }
@@ -112,15 +123,18 @@ public class IoDialogs {
     return csvImportDialog;
   }
 
-  public static class CsvImportData {
+  /**
+   * Container class to gather detailed information about the shape of csv files to import / export
+   */
+  public static class CsvIoData {
     private final String csvSeparator;
     private final DirectoryHierarchy hierarchy;
-    private final SourceType source;
+    private final SourceType shape;
 
-    public CsvImportData(String csvSeparator, DirectoryHierarchy hierarchy, SourceType source) {
+    public CsvIoData(String csvSeparator, DirectoryHierarchy hierarchy, SourceType shape) {
       this.csvSeparator = csvSeparator;
       this.hierarchy = hierarchy;
-      this.source = source;
+      this.shape = shape;
     }
 
     public String getCsvSeparator() {
@@ -131,18 +145,18 @@ public class IoDialogs {
       return hierarchy;
     }
 
-    public SourceType getSource() {
-      return source;
+    public SourceType getShape() {
+      return shape;
     }
 
     @Override
     public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
-      CsvImportData that = (CsvImportData) o;
+      CsvIoData that = (CsvIoData) o;
       return csvSeparator.equals(that.csvSeparator)
           && hierarchy == that.hierarchy
-          && source == that.source;
+          && shape == that.shape;
     }
 
     @Override
@@ -154,13 +168,13 @@ public class IoDialogs {
           + ", hierarchy="
           + hierarchy
           + ", source="
-          + source
+          + shape
           + '}';
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(csvSeparator, hierarchy, source);
+      return Objects.hash(csvSeparator, hierarchy, shape);
     }
 
     public enum DirectoryHierarchy {

@@ -5,6 +5,8 @@
 */
 package edu.ie3.netpad.menu;
 
+import static edu.ie3.netpad.io.controller.IoDialogs.CsvIoData.SourceType.ARCHIVE;
+
 import edu.ie3.netpad.exception.NetPadPlusPlusException;
 import edu.ie3.netpad.io.controller.IoController;
 import edu.ie3.netpad.io.controller.IoDialogs;
@@ -50,12 +52,12 @@ public class FileMenuController {
     // initialize all currently activated menu items
     fromCsvItem.setOnAction(
         event ->
-            IoDialogs.csvImportDialog()
+            IoDialogs.csvIoDialog("Import from csv files", "From directory", "From archive")
                 .showAndWait()
                 .flatMap(
-                    csvImportData -> {
+                    csvIoData -> {
                       Optional<Boolean> maybeSuccess;
-                      switch (csvImportData.getSource()) {
+                      switch (csvIoData.getShape()) {
                         case ARCHIVE:
                           maybeSuccess =
                               getPathFromFileChooser(menuBar.getScene())
@@ -64,8 +66,8 @@ public class FileMenuController {
                                           IoController.getInstance()
                                               .loadGridFromArchive(
                                                   absoluteDirectoryPath,
-                                                  csvImportData.getCsvSeparator(),
-                                                  csvImportData.getHierarchy()));
+                                                  csvIoData.getCsvSeparator(),
+                                                  csvIoData.getHierarchy()));
                           break;
                         case DIRECTORY:
                           maybeSuccess =
@@ -73,14 +75,14 @@ public class FileMenuController {
                                   .map(
                                       absoluteDirectoryPath ->
                                           IoController.getInstance()
-                                              .loadGridFromCsv(
+                                              .loadGridFromDirectory(
                                                   absoluteDirectoryPath,
-                                                  csvImportData.getCsvSeparator(),
-                                                  csvImportData.getHierarchy()));
+                                                  csvIoData.getCsvSeparator(),
+                                                  csvIoData.getHierarchy()));
                           break;
                         default:
                           throw new NetPadPlusPlusException(
-                              "Unable to handle csv source '" + csvImportData.getSource() + "'");
+                              "Unable to handle csv shape '" + csvIoData.getShape() + "'");
                       }
                       return maybeSuccess;
                     })
@@ -103,15 +105,19 @@ public class FileMenuController {
                 .ifPresent(ignored -> activateSaveButton()));
     saveGridCsvItem.setOnAction(
         event ->
-            IoDialogs.chooseDir("Save grid in folder", menuBar.getScene())
+            IoDialogs.csvIoDialog("Export to csv files", "To directory", "To archive")
+                .showAndWait()
                 .ifPresent(
-                    saveFolderPath ->
-                        IoDialogs.csvFileSeparatorDialog()
-                            .showAndWait()
+                    csvIoData ->
+                        getPathFromDirChooser(menuBar.getScene())
                             .ifPresent(
-                                csvSeparator ->
+                                absoluteDirectoryPath ->
                                     IoController.getInstance()
-                                        .saveGridAsCsv(saveFolderPath, csvSeparator))));
+                                        .saveGrid(
+                                            absoluteDirectoryPath,
+                                            csvIoData.getCsvSeparator(),
+                                            csvIoData.getHierarchy(),
+                                            csvIoData.getShape() == ARCHIVE))));
 
     exitItem.setOnAction(event -> System.exit(0));
   }

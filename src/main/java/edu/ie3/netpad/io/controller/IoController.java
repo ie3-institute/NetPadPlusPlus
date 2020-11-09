@@ -26,10 +26,14 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
+import org.apache.commons.io.FilenameUtils;
 import org.locationtech.jts.io.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,7 +88,7 @@ public class IoController {
   public boolean loadGridFromArchive(
       File absoluteArchivePath,
       String csvSeparator,
-      IoDialogs.CsvImportData.DirectoryHierarchy hierarchy) {
+      IoDialogs.CsvIoData.DirectoryHierarchy hierarchy) {
     /* Create a temp directory */
     Path tmpDirectory;
     try {
@@ -104,7 +108,7 @@ public class IoController {
     }
 
     /* Get the grid from the extracted folder */
-    boolean result = loadGridFromCsv(folderPath.toFile(), csvSeparator, hierarchy);
+    boolean result = loadGridFromDirectory(folderPath.toFile(), csvSeparator, hierarchy);
 
     /* Clean up the temp directory */
     try {
@@ -124,10 +128,10 @@ public class IoController {
    * @param hierarchy Information about the underlying directory hierarchy
    * @return true, if the grid has been read successfully, false otherwise
    */
-  public boolean loadGridFromCsv(
+  public boolean loadGridFromDirectory(
       File absoluteFilePath,
       String csvSeparator,
-      IoDialogs.CsvImportData.DirectoryHierarchy hierarchy) {
+      IoDialogs.CsvIoData.DirectoryHierarchy hierarchy) {
     /* Collect the information needed to obtain the grid structure */
     String gridName = extractGridName(absoluteFilePath);
     FileNamingStrategy fileNamingStrategy;
@@ -222,32 +226,99 @@ public class IoController {
             - 1];
   }
 
-  public void saveGridAsCsv(File saveFolderPath, String csvSeparator) {
+  /**
+   * Saves the given grid container to csv files. Either compressed or not compressed.
+   *
+   * @param directoryPath Target path, where to put
+   * @param csvSeparator csv column separator to use
+   * @param hierarchy Information about the hierarchy of the directories to use
+   * @param compress true, if the output should be compressed or not
+   */
+  public void saveGrid(
+      File directoryPath,
+      String csvSeparator,
+      IoDialogs.CsvIoData.DirectoryHierarchy hierarchy,
+      boolean compress) {
     // issue an event that we want to save,
     // the listener provided is a one-shot instance which fires when the
     // gridController returns
     notifyListener(
         new SaveGridEvent(
             (observable, oldValue, gridContainer) -> {
-
-              // create a new csv file sink
-              CsvFileSink csvFileSink =
-                  new CsvFileSink(
-                      saveFolderPath.getAbsolutePath(),
-                      new ProcessorProvider(),
-                      new FileNamingStrategy(),
-                      false,
-                      csvSeparator);
-
-              if (gridContainer instanceof JointGridContainer) {
-                csvFileSink.persistJointGrid((JointGridContainer) gridContainer);
-              } else if (gridContainer instanceof SubGridContainer) {
-                csvFileSink.persistAll(gridContainer.allEntitiesAsList());
-              } else {
-                throw new IoControllerException(
-                    "Cannot persist unknown grid container: " + gridContainer);
-              }
+              if (compress)
+                saveGridCompressed(
+                    directoryPath.getAbsolutePath(), gridContainer, hierarchy, csvSeparator);
+              else
+                saveGridToCsv(
+                    directoryPath.getAbsolutePath(), gridContainer, hierarchy, csvSeparator);
             }));
+  }
+
+  /**
+   * Saves the grid to csv files by utilizing {@link #saveGridToCsv(String, GridContainer,
+   * IoDialogs.CsvIoData.DirectoryHierarchy, String)} and later compresses the output.
+   *
+   * @param targetPath Target directory
+   * @param gridContainer Grid container to save
+   * @param hierarchy Information about the hierarchy of the directories to use
+   * @param csvSeparator csv column separator to use
+   */
+  private void saveGridCompressed(
+      String targetPath,
+      GridContainer gridContainer,
+      IoDialogs.CsvIoData.DirectoryHierarchy hierarchy,
+      String csvSeparator) {
+    String gridName = gridContainer.getGridName();
+    try {
+      /* Determine the target directory path. If the output is meant to be compressed, write the raw files to
+       * temp folder */
+      String tmpDirectory = Files.createTempDirectory("save_grid").toAbsolutePath().toString();
+      String targetDirectory =
+          FilenameUtils.concat(
+              tmpDirectory,
+              ZonedDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddhhmmssSSS")));
+      saveGridToCsv(targetDirectory, gridContainer, hierarchy, csvSeparator);
+      Path targetFile = Paths.get(FilenameUtils.concat(targetPath, gridName + ".tar.gz"));
+      TarballUtils.compress(Paths.get(targetDirectory), targetFile);
+      FileIOUtils.deleteRecursively(tmpDirectory);
+    } catch (IOException | FileException e) {
+      throw new IoControllerException("Cannot save '" + gridName + "'.", e);
+    }
+  }
+
+  /**
+   * Saves the given grid container to target directory without any compression.
+   *
+   * @param targetDirectory Target directory
+   * @param gridContainer Grid container to save
+   * @param hierarchy Information about the hierarchy of the directories to use
+   * @param csvSeparator csv column separator to use
+   */
+  private void saveGridToCsv(
+      String targetDirectory,
+      GridContainer gridContainer,
+      IoDialogs.CsvIoData.DirectoryHierarchy hierarchy,
+      String csvSeparator) {
+    /* Persist the raw csv data */
+    FileNamingStrategy fileNamingStrategy =
+        hierarchy == IoDialogs.CsvIoData.DirectoryHierarchy.FLAT
+            ? new FileNamingStrategy()
+            : new HierarchicFileNamingStrategy(
+                new DefaultDirectoryHierarchy(targetDirectory, gridContainer.getGridName()));
+    CsvFileSink csvFileSink =
+        new CsvFileSink(
+            targetDirectory, new ProcessorProvider(), fileNamingStrategy, false, csvSeparator);
+
+    if (gridContainer instanceof JointGridContainer) {
+      csvFileSink.persistJointGrid((JointGridContainer) gridContainer);
+    } else if (gridContainer instanceof SubGridContainer) {
+      csvFileSink.persistAll(gridContainer.allEntitiesAsList());
+    } else {
+      throw new IoControllerException("Cannot persist unknown grid container: " + gridContainer);
+    }
+
+    /* Properly shut down the sink */
+    csvFileSink.shutdown();
   }
 
   private void notifyListener(IOEvent ioEvent) {
