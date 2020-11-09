@@ -23,42 +23,6 @@ import javafx.stage.DirectoryChooser;
  */
 public class IoDialogs {
 
-  @Deprecated
-  public static Dialog<String> csvFileSeparatorDialog() {
-
-    GridPane gridPane = new GridPane();
-    gridPane.setHgap(10);
-    gridPane.setVgap(10);
-    gridPane.setPadding(new Insets(20, 150, 10, 10));
-
-    Label lbl = new Label(".csv file separator: ");
-
-    final ComboBox<String> comboBox = new ComboBox<>(FXCollections.observableArrayList(";", ","));
-    comboBox.getSelectionModel().selectFirst();
-
-    gridPane.addRow(0, lbl, comboBox);
-
-    DialogPane dialogPane = new DialogPane();
-    dialogPane.setContent(gridPane);
-
-    dialogPane.getButtonTypes().addAll(ButtonType.APPLY, ButtonType.CANCEL);
-
-    Dialog<String> csvFileSeparatorDialog = new Dialog<>();
-    csvFileSeparatorDialog.setTitle("Select .csv-file separator");
-    csvFileSeparatorDialog.setDialogPane(dialogPane);
-
-    csvFileSeparatorDialog.setResultConverter(
-        buttonType -> {
-          if (buttonType.equals(ButtonType.APPLY)) {
-            return comboBox.getSelectionModel().getSelectedItem();
-          } else {
-            return null;
-          }
-        });
-
-    return csvFileSeparatorDialog;
-  }
-
   /**
    * Creates a dialog, that is used to ask the user for details on how the csv data is meant to look
    * like in detail.
@@ -179,12 +143,12 @@ public class IoDialogs {
 
     public enum DirectoryHierarchy {
       FLAT,
-      HIERARCHIC;
+      HIERARCHIC
     }
 
     public enum SourceType {
       DIRECTORY,
-      ARCHIVE;
+      ARCHIVE
     }
   }
 
