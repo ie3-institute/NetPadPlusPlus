@@ -96,7 +96,7 @@ public class GridLayouter {
                               referencePoint.getX(),
                               referencePoint.getY())
                           / scaleFactorDistance;
-                  double bearing = calcBearing(point, referencePoint);
+                  double bearing = calcBearing(referencePoint, point);
                   LatLon geoPosition = calcGeoPosition(distance, bearing);
 
                   // Set the new geo position in the corresponding NodeInputModel.

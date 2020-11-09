@@ -57,6 +57,10 @@ import tech.units.indriya.quantity.Quantities;
  */
 public class SampleGridFactory {
 
+  public SampleGridFactory() {
+    throw new IllegalStateException("Utility class");
+  }
+
   public static JointGridContainer sampleJointGrid() throws ParseException, ParsingException {
 
     RawGridElements rawGridElements = jointSampleRawGridElements();

@@ -21,6 +21,10 @@ import java.util.stream.Collectors;
  */
 public class ContainerUpdateUtil {
 
+  public ContainerUpdateUtil() {
+    throw new IllegalStateException("Utility class");
+  }
+
   public static GridContainer updateGridWithSystemParticipant(
       GridContainer grid,
       SystemParticipantInput oldAssetEntity,

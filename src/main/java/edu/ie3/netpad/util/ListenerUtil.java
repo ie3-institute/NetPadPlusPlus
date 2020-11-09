@@ -17,6 +17,10 @@ import javafx.beans.value.ChangeListener;
  */
 public class ListenerUtil {
 
+  public ListenerUtil() {
+    throw new IllegalStateException("Utility class");
+  }
+
   // todo JH javadocs 1) should only called once during init, 2) should contain all actions that are
   // performed by entity update on this layer
   public static ChangeListener<GridEvent> createGridEventListener(
