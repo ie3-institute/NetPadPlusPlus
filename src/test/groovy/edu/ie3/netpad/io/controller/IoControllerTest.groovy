@@ -38,7 +38,8 @@ class IoControllerTest extends Specification {
 	IoController ioController
 
 	def setupSpec() {
-		testFileFolder = this.getClass().getResource("/testFiles").toString().replaceAll("^file:/", "")
+		/* Remove the leading "file:" and the first "/", if the path is an absolute path on a windows machine */
+		testFileFolder = this.getClass().getResource("/testFiles").toString().replaceAll("^file:", "").replaceAll("^/(?=[A-Z]:)", "")
 		ioListener = new IoEventListener()
 		ioController = new IoController()
 		ioController.registerGridControllerListener(ioListener)
