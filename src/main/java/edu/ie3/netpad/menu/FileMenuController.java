@@ -88,7 +88,7 @@ public class FileMenuController {
                     })
                 .ifPresent(
                     success -> {
-                      if (success) activateSaveButton();
+                      if (Boolean.TRUE.equals(success)) activateSaveButton();
                       else {
                         Alert alert =
                             new Alert(
