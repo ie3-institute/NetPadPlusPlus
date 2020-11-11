@@ -169,7 +169,7 @@ class IoControllerTest extends Specification {
 		expectedDirectories.each { filePath ->
 			def file = new File(filePath)
 			assert file.exists()
-			assert file.isFile()
+			assert file.file
 		}
 
 		cleanup:
@@ -206,7 +206,7 @@ class IoControllerTest extends Specification {
 		expectedDirectories.each { filePath ->
 			def file = new File(filePath)
 			assert file.exists()
-			assert file.isFile()
+			assert file.file
 		}
 
 		cleanup:
@@ -249,8 +249,8 @@ class IoControllerTest extends Specification {
 		def tarInputStream = new TarArchiveInputStream(new GZIPInputStream(new FileInputStream(expectedArchiveFile)))
 
 		ArchiveEntry archiveEntry
-		while ((archiveEntry = tarInputStream.getNextEntry()) != null) {
-			actualEntries.add(archiveEntry.getName())
+		while ((archiveEntry = tarInputStream.nextEntry) != null) {
+			actualEntries.add(archiveEntry.name)
 		}
 
 		actualEntries.size() == expectedDirectories.size()
@@ -298,8 +298,8 @@ class IoControllerTest extends Specification {
 		def tarInputStream = new TarArchiveInputStream(new GZIPInputStream(new FileInputStream(expectedArchiveFile)))
 
 		ArchiveEntry archiveEntry
-		while ((archiveEntry = tarInputStream.getNextEntry()) != null) {
-			actualEntries.add(archiveEntry.getName())
+		while ((archiveEntry = tarInputStream.nextEntry) != null) {
+			actualEntries.add(archiveEntry.name)
 		}
 
 		actualEntries.size() == expectedDirectories.size()
