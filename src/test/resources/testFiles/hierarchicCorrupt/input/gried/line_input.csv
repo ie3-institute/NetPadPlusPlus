@@ -1,0 +1,2 @@
+uuid;geo_position;id;length;node_a;node_b;olm_characteristic;operates_from;operates_until;operator;parallel_devices;type
+0a4e81bb-f243-4c79-9f78-49d8dfcda1cf;{"type":"LineString","coordinates":[[11.4118,53.651],[11.411,53.6504]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}};LV2.101 Line 39;0.075;795857b5-7b4c-4faf-a219-b3fdbda31da3;45fade7b-0a62-465f-80cb-fb67ce797206;olm:{(0.00,1.00)};;;;1;7bd9634c-4980-47c1-ab58-aef2d95c3fed

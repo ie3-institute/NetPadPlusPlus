@@ -1,0 +1,4 @@
+uuid;geo_position;id;operates_from;operates_until;operator;slack;subnet;v_rated;v_target;volt_lvl
+795857b5-7b4c-4faf-a219-b3fdbda31da3;{"type":"Point","coordinates":[11.4118,53.651],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}};LV2.101 Bus 19;;;;false;2;0.4;1.0;Niederspannung
+23237b2f-ae25-41d9-966f-678f6428b962;{"type":"Point","coordinates":[11.4118,53.651],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}};MV1.101 Bus 8;;;;true;1;20.0;1.025;Mittelspannung
+45fade7b-0a62-465f-80cb-fb67ce797206;{"type":"Point","coordinates":[11.411,53.6504],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}};LV2.101 Bus 55;;;;false;2;0.4;1.0;Niederspannung

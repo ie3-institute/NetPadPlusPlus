@@ -1,0 +1,2 @@
+uuid;id;operator;operates_from;operates_until;thermal_bus;storage_volume_lvl;storage_volume_lvl_min;inlet_temp;return_temp;c
+a5dbcac6-9552-4755-af04-6bf31ca6b9c7;thermal storage;;;;8670605f-81f6-419a-b5f6-ef1a5802e206;5.0;1.0;60;30;4.184

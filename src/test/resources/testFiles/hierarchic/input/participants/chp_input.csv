@@ -1,0 +1,2 @@
+uuid;id;operator;operates_from;operates_until;node;thermal_bus;q_characteristics;type;thermal_storage;market_reaction
+80c7a691-a69a-47f8-b280-1f90661a1c24;chp unit;;;;45fade7b-0a62-465f-80cb-fb67ce797206;8670605f-81f6-419a-b5f6-ef1a5802e206;cosPhiFixed:{(0.00,0.98)};48765188-7c51-4257-aee9-ac7e700d8798;a5dbcac6-9552-4755-af04-6bf31ca6b9c7;false
