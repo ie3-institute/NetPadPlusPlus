@@ -242,7 +242,7 @@ class IoControllerTest extends Specification {
 		then: "the archive file is apparent"
 		noExceptionThrown()
 		expectedArchiveFile.exists()
-		expectedArchiveFile.isFile()
+		expectedArchiveFile.file
 
 		and: "the contains the correct entries"
 		def actualEntries = []
