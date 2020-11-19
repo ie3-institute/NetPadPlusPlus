@@ -8,7 +8,8 @@ package edu.ie3.netpad.menu;
 import edu.ie3.netpad.grid.event.GridEvent;
 import edu.ie3.netpad.grid.event.GridEventListener;
 import edu.ie3.netpad.grid.event.ReplaceGridEvent;
-import edu.ie3.netpad.tool.ToolController;
+import edu.ie3.netpad.tool.controller.ToolController;
+import edu.ie3.netpad.tool.controller.ToolDialogs;
 import edu.ie3.netpad.util.ListenerUtil;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
@@ -30,10 +31,12 @@ public class ToolMenuController implements GridEventListener {
       ListenerUtil.createGridEventListener(this);
 
   @FXML public MenuItem layoutGridItem;
+  @FXML private MenuItem fixLineLengthItem;
 
   @FXML
   public void initialize() {
     layoutGridItem.setOnAction(event -> ToolController.getInstance().layoutGrid());
+    fixLineLengthItem.setOnAction(event -> ToolDialogs.fixLineLengthDialog().show());
   }
 
   @Override

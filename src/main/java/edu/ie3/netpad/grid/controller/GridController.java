@@ -27,7 +27,7 @@ import edu.ie3.netpad.io.event.IOEvent;
 import edu.ie3.netpad.io.event.ReadGridEvent;
 import edu.ie3.netpad.io.event.SaveGridEvent;
 import edu.ie3.netpad.map.event.MapEvent;
-import edu.ie3.netpad.tool.ToolController;
+import edu.ie3.netpad.tool.controller.ToolController;
 import edu.ie3.netpad.tool.event.LayoutGridRequestEvent;
 import edu.ie3.netpad.tool.event.LayoutGridResponse;
 import edu.ie3.netpad.tool.event.ToolEvent;
@@ -50,11 +50,19 @@ public class GridController {
 
   private static final Logger log = LoggerFactory.getLogger(GridController.class);
 
+  private static final class InstanceHolder {
+    static final GridController INSTANCE = new GridController();
+  }
+
+  public static GridController getInstance() {
+    return GridController.InstanceHolder.INSTANCE;
+  }
+
   private final Map<UUID, GridModel> subGrids = new LinkedHashMap<>();
 
   private final ObjectProperty<GridEvent> gridUpdateEventProperty = new SimpleObjectProperty<>();
 
-  public GridController() {
+  private GridController() {
 
     // register for updates from iOController
     IoController.getInstance().registerGridControllerListener(this.ioEventListener());
@@ -66,6 +74,14 @@ public class GridController {
     EditGridContextController.getInstance()
         .registerGridControllerListener(
             (observable, oldValue, gridContextEvent) -> handleGridModifications(gridContextEvent));
+  }
+
+  public boolean isGridLoaded() {
+    return subGrids.isEmpty();
+  }
+
+  public Map<UUID, GridModel> getSubGrids() {
+    return subGrids;
   }
 
   private void handleReadGridEvent(ReadGridEvent newValue) {
