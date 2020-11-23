@@ -57,12 +57,14 @@ public class ToolController {
   }
 
   /**
-   * Ask the {@link GridController} to fix discrepancy between electrical and geographical line length
+   * Ask the {@link GridController} to fix discrepancy between electrical and geographical line
+   * length
    *
    * @param data user preferences for the given operation
    */
   public void fixLineLength(ToolDialogs.FixLineLengthData data) {
-    notifyListener(new FixLineLengthRequestEvent(data.getResolutionMode(), data.getAffectedSubnets()));
+    notifyListener(
+        new FixLineLengthRequestEvent(data.getResolutionMode(), data.getAffectedSubnets()));
   }
 
   public void registerGridControllerListener(ChangeListener<ToolEvent> listener) {

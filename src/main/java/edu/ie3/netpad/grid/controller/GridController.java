@@ -35,23 +35,19 @@ import edu.ie3.netpad.tool.event.FixLineLengthRequestEvent;
 import edu.ie3.netpad.tool.event.LayoutGridRequestEvent;
 import edu.ie3.netpad.tool.event.LayoutGridResponse;
 import edu.ie3.netpad.tool.event.ToolEvent;
+import edu.ie3.util.geo.GeoUtils;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import edu.ie3.util.geo.GeoUtils;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
+import javax.measure.quantity.Length;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tech.units.indriya.ComparableQuantity;
-import tech.units.indriya.quantity.Quantities;
-import tech.units.indriya.unit.Units;
-
-import javax.measure.quantity.Length;
 
 /**
  * //ToDo: Class Description
@@ -218,11 +214,11 @@ public class GridController {
       } else if (newValue instanceof LayoutGridResponse) {
         handleReadGridEvent(new ReadGridEvent(((LayoutGridResponse) newValue).getGrid()));
         log.debug("Received Tool response event");
-      } else if(newValue instanceof FixLineLengthRequestEvent) {
-          FixLineLengthRequestEvent event = (FixLineLengthRequestEvent) newValue;
-          LineLengthResolutionMode resolutionMode = event.getResolutionMode();
-          Set<Integer> selectedSubnets = event.getSelectedSubnets();
-          fixLineLength(resolutionMode, selectedSubnets);
+      } else if (newValue instanceof FixLineLengthRequestEvent) {
+        FixLineLengthRequestEvent event = (FixLineLengthRequestEvent) newValue;
+        LineLengthResolutionMode resolutionMode = event.getResolutionMode();
+        Set<Integer> selectedSubnets = event.getSelectedSubnets();
+        fixLineLength(resolutionMode, selectedSubnets);
       } else {
         throw new RuntimeException("Invalid GridContainer provided!");
       }
@@ -232,112 +228,135 @@ public class GridController {
     };
   }
 
-    /**
-     * Fix the line length discrepancy based on the user given {@link ToolDialogs.FixLineLengthData}
-     *
-     * @param resolutionMode Selected resolution mode
-     * @param selectedSubnets Subnets to apply adjustments to
-     */
-    public void fixLineLength(LineLengthResolutionMode resolutionMode, Set<Integer> selectedSubnets) {
-        String gridName = GridController.getInstance().getSubGrids().values().stream().findFirst().map(model -> model.getSubGridContainer().getGridName()).orElse("");
-        JointGridContainer updatedGrid;
+  /**
+   * Fix the line length discrepancy based on the user given {@link ToolDialogs.FixLineLengthData}
+   *
+   * @param resolutionMode Selected resolution mode
+   * @param selectedSubnets Subnets to apply adjustments to
+   */
+  public void fixLineLength(LineLengthResolutionMode resolutionMode, Set<Integer> selectedSubnets) {
+    String gridName =
+        GridController.getInstance().getSubGrids().values().stream()
+            .findFirst()
+            .map(model -> model.getSubGridContainer().getGridName())
+            .orElse("");
+    JointGridContainer updatedGrid;
 
-        /* Act depending on the chosen resolution mode */
-        switch (resolutionMode) {
-            case GEOGRAPHICAL:
-                updatedGrid = setElectricalToGeographicalLineLength(selectedSubnets);
-                break;
-            case ELECTRICAL:
-                /* TODO CK: Figure out, what to do here */
-            default:
-                log.error("Unknown resolution mode '{}'", resolutionMode);
-                return;
-        }
-
-        /* Build a new event and inform the listeners about the "new" / adapted grid model */
-        handleReadGridEvent(new ReadGridEvent(updatedGrid));
+    /* Act depending on the chosen resolution mode */
+    switch (resolutionMode) {
+      case GEOGRAPHICAL:
+        updatedGrid = setElectricalToGeographicalLineLength(selectedSubnets);
+        break;
+      case ELECTRICAL:
+        /* TODO CK: Figure out, what to do here */
+      default:
+        log.error("Unknown resolution mode '{}'", resolutionMode);
+        return;
     }
 
-    /**
-     * Sets the electrical length of all lines within the selected sub nets to the length of their geographical line
-     * string if apparent. If not, it is set to the geographical distance between start and end node.
-     *
-     * @param selectedSubnets Subnets to apply adjustments to
-     * @return A {@link JointGridContainer} with updated line models
-     */
-    private JointGridContainer setElectricalToGeographicalLineLength(Set<Integer> selectedSubnets) {
-        /* Adjust the electrical line length to be the same as the geographical distance */
-        List<SubGridContainer> subGridContainers = GridController.getInstance().getSubGrids().values().parallelStream().map(GridModel::getSubGridContainer).map(subGridContainer -> {
-            if (!selectedSubnets.contains(subGridContainer.getSubnet())) {
-                /* If this grid isn't selected, hand it back, as it is */
-                return subGridContainer;
-            } else {
-                /* Update all lines */
-                Set<LineInput> lines = subGridContainer.getRawGrid().getLines().parallelStream().map(this::setLineLengthToGeographicDistance).collect(Collectors.toSet());
+    /* Build a new event and inform the listeners about the "new" / adapted grid model */
+    handleReadGridEvent(new ReadGridEvent(updatedGrid));
+  }
 
-                /* Put together, what has been there before */
-                RawGridElements rawGrid = new RawGridElements(
-                        subGridContainer.getRawGrid().getNodes(),
-                        lines,
-                        subGridContainer.getRawGrid().getTransformer2Ws(),
-                        subGridContainer.getRawGrid().getTransformer3Ws(),
-                        subGridContainer.getRawGrid().getSwitches(),
-                        subGridContainer.getRawGrid().getMeasurementUnits()
-                );
-                return new SubGridContainer(subGridContainer.getGridName(), subGridContainer.getSubnet(), rawGrid, subGridContainer.getSystemParticipants(), subGridContainer.getGraphics());
-            }
-        }).collect(Collectors.toList());
+  /**
+   * Sets the electrical length of all lines within the selected sub nets to the length of their
+   * geographical line string if apparent. If not, it is set to the geographical distance between
+   * start and end node.
+   *
+   * @param selectedSubnets Subnets to apply adjustments to
+   * @return A {@link JointGridContainer} with updated line models
+   */
+  private JointGridContainer setElectricalToGeographicalLineLength(Set<Integer> selectedSubnets) {
+    /* Adjust the electrical line length to be the same as the geographical distance */
+    List<SubGridContainer> subGridContainers =
+        GridController.getInstance().getSubGrids().values().parallelStream()
+            .map(GridModel::getSubGridContainer)
+            .map(
+                subGridContainer -> {
+                  if (!selectedSubnets.contains(subGridContainer.getSubnet())) {
+                    /* If this grid isn't selected, hand it back, as it is */
+                    return subGridContainer;
+                  } else {
+                    /* Update all lines */
+                    Set<LineInput> lines =
+                        subGridContainer.getRawGrid().getLines().parallelStream()
+                            .map(this::setLineLengthToGeographicDistance)
+                            .collect(Collectors.toSet());
 
-        /* Assemble all sub grids to one container */
-        return ContainerUtils.combineToJointGrid(subGridContainers);
+                    /* Put together, what has been there before */
+                    RawGridElements rawGrid =
+                        new RawGridElements(
+                            subGridContainer.getRawGrid().getNodes(),
+                            lines,
+                            subGridContainer.getRawGrid().getTransformer2Ws(),
+                            subGridContainer.getRawGrid().getTransformer3Ws(),
+                            subGridContainer.getRawGrid().getSwitches(),
+                            subGridContainer.getRawGrid().getMeasurementUnits());
+                    return new SubGridContainer(
+                        subGridContainer.getGridName(),
+                        subGridContainer.getSubnet(),
+                        rawGrid,
+                        subGridContainer.getSystemParticipants(),
+                        subGridContainer.getGraphics());
+                  }
+                })
+            .collect(Collectors.toList());
+
+    /* Assemble all sub grids to one container */
+    return ContainerUtils.combineToJointGrid(subGridContainers);
+  }
+
+  /**
+   * Adjusts the line length to the length of their geographical line string if apparent. If not, it
+   * is set to the geographical distance between start and end node.
+   *
+   * @param line line model to adjust
+   * @return The adjusted line model
+   */
+  private LineInput setLineLengthToGeographicDistance(LineInput line) {
+    ComparableQuantity<Length> lineLength;
+    if (Objects.nonNull(line.getGeoPosition())) {
+      lineLength =
+          lengthOfLineString(line.getGeoPosition())
+              .orElseGet(
+                  () -> {
+                    log.warn(
+                        "Cannot determine the length of the line string of line '{}' as it only contains one coordinate. Take distance between it's nodes instead.",
+                        line);
+                    return GridAndGeoUtils.distanceBetweenNodes(line.getNodeA(), line.getNodeB());
+                  });
+    } else {
+      /* Distance between both of the nodes */
+      lineLength = GridAndGeoUtils.distanceBetweenNodes(line.getNodeA(), line.getNodeB());
+    }
+    return line.copy().length(lineLength).build();
+  }
+
+  /**
+   * Calculate the length of a line string
+   *
+   * @param lineString The line string to calculate the length of
+   * @return An option to the length, if it can be determined
+   */
+  private Optional<ComparableQuantity<Length>> lengthOfLineString(LineString lineString) {
+    Coordinate[] coordinates = lineString.getCoordinates();
+
+    if (coordinates.length == 1) {
+      return Optional.empty();
     }
 
-    /**
-     * Adjusts the line length to the length of their geographical line string if apparent. If not, it is set to the
-     * geographical distance between start and end node.
-     *
-     * @param line line model to adjust
-     * @return  The adjusted line model
-     */
-    private LineInput setLineLengthToGeographicDistance(LineInput line) {
-        ComparableQuantity<Length> lineLength;
-        if (Objects.nonNull(line.getGeoPosition())) {
-            lineLength = lengthOfLineString(line.getGeoPosition()).orElseGet(() -> {
-                log.warn("Cannot determine the length of the line string of line '{}' as it only contains one coordinate. Take distance between it's nodes instead.", line);
-                return GridAndGeoUtils.distanceBetweenNodes(line.getNodeA(), line.getNodeB());
-            });
-        } else {
-            /* Distance between both of the nodes */
-            lineLength = GridAndGeoUtils.distanceBetweenNodes(line.getNodeA(), line.getNodeB());
-        }
-        return line.copy().length(lineLength).build();
+    /* Go over the line piecewise and sum up the distance */
+    Coordinate a = coordinates[0];
+    Coordinate b = coordinates[1];
+    ComparableQuantity<Length> length = GeoUtils.calcHaversine(a.x, a.y, b.x, b.y);
+    for (int coordIndex = 2; coordIndex < coordinates.length; coordIndex++) {
+      a = b;
+      b = coordinates[coordIndex];
+      length = length.add(GeoUtils.calcHaversine(a.x, a.y, b.x, b.y));
     }
 
-    /**
-     * Calculate the length of a line string
-     *
-     * @param lineString The line string to calculate the length of
-     * @return An option to the length, if it can be determined
-     */
-    private Optional<ComparableQuantity<Length>> lengthOfLineString(LineString lineString) {
-        Coordinate[] coordinates = lineString.getCoordinates();
-
-        if(coordinates.length == 1){
-            return Optional.empty();
-        }
-
-        /* Go over the line piecewise and sum up the distance */
-        Coordinate a = coordinates[0];
-        Coordinate b = coordinates[1];
-        ComparableQuantity<Length> length = GeoUtils.calcHaversine(a.x, a.y, b.x, b.y);
-        for(int coordIndex = 2; coordIndex < coordinates.length; coordIndex++) {
-            a = b;
-            b = coordinates[coordIndex];
-            length = length.add(GeoUtils.calcHaversine(a.x, a.y, b.x, b.y));
-        }
-
-        return Optional.of(length);
-    }
+    return Optional.of(length);
+  }
 
   private ChangeListener<IOEvent> ioEventListener() {
     return (observable, oldValue, newValue) -> {

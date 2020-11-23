@@ -13,10 +13,9 @@ import edu.ie3.datamodel.models.input.container.SubGridContainer;
 import edu.ie3.datamodel.models.voltagelevels.VoltageLevel;
 import edu.ie3.netpad.exception.NetPadPlusPlusException;
 import edu.ie3.netpad.grid.controller.GridController;
+import edu.ie3.netpad.tool.LineLengthResolutionMode;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import edu.ie3.netpad.tool.LineLengthResolutionMode;
 import javafx.beans.binding.Bindings;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -181,7 +180,8 @@ public class ToolDialogs {
     private final LineLengthResolutionMode resolutionMode;
     private final Set<Integer> affectedSubnets;
 
-    public FixLineLengthData(LineLengthResolutionMode resolutionMode, Set<Integer> affectedSubnets) {
+    public FixLineLengthData(
+        LineLengthResolutionMode resolutionMode, Set<Integer> affectedSubnets) {
       this.resolutionMode = resolutionMode;
       this.affectedSubnets = affectedSubnets;
     }
