@@ -5,8 +5,8 @@
 */
 package edu.ie3.netpad.tool.controller;
 
-import static edu.ie3.netpad.tool.controller.ToolDialogs.ResolutionMode.ELECTRICAL;
-import static edu.ie3.netpad.tool.controller.ToolDialogs.ResolutionMode.GEOGRAPHICAL;
+import static edu.ie3.netpad.tool.LineLengthResolutionMode.ELECTRICAL;
+import static edu.ie3.netpad.tool.LineLengthResolutionMode.GEOGRAPHICAL;
 import static javafx.scene.control.CheckBoxTreeItem.checkBoxSelectionChangedEvent;
 
 import edu.ie3.datamodel.models.input.container.SubGridContainer;
@@ -15,6 +15,8 @@ import edu.ie3.netpad.exception.NetPadPlusPlusException;
 import edu.ie3.netpad.grid.controller.GridController;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import edu.ie3.netpad.tool.LineLengthResolutionMode;
 import javafx.beans.binding.Bindings;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -97,8 +99,8 @@ public class ToolDialogs {
         buttonType -> {
           if (buttonType == ButtonType.OK) {
             /* Which mode is chosen? */
-            ResolutionMode resolutionMode =
-                (ResolutionMode) tglGrp.getSelectedToggle().getUserData();
+            LineLengthResolutionMode resolutionMode =
+                (LineLengthResolutionMode) tglGrp.getSelectedToggle().getUserData();
 
             return new FixLineLengthData(resolutionMode, selectedSubnets);
           } else if (buttonType == ButtonType.CANCEL) return null;
@@ -175,21 +177,16 @@ public class ToolDialogs {
     return voltLvlToTreeItem.values();
   }
 
-  public enum ResolutionMode {
-    GEOGRAPHICAL,
-    ELECTRICAL
-  }
-
   public static class FixLineLengthData {
-    private final ResolutionMode resolutionMode;
+    private final LineLengthResolutionMode resolutionMode;
     private final Set<Integer> affectedSubnets;
 
-    public FixLineLengthData(ResolutionMode resolutionMode, Set<Integer> affectedSubnets) {
+    public FixLineLengthData(LineLengthResolutionMode resolutionMode, Set<Integer> affectedSubnets) {
       this.resolutionMode = resolutionMode;
       this.affectedSubnets = affectedSubnets;
     }
 
-    public ResolutionMode getResolutionMode() {
+    public LineLengthResolutionMode getResolutionMode() {
       return resolutionMode;
     }
 

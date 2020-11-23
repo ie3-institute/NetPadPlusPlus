@@ -40,7 +40,7 @@ public class ToolMenuController implements GridEventListener {
         event ->
             ToolDialogs.fixLineLengthDialog()
                 .showAndWait()
-                .ifPresent(data -> System.out.println(data)));
+                .ifPresent(data -> ToolController.getInstance().fixLineLength(data)));
   }
 
   @Override
