@@ -7,25 +7,32 @@ package edu.ie3.netpad.tool.controller;
 
 import static edu.ie3.netpad.tool.controller.ToolDialogs.ResolutionMode.ELECTRICAL;
 import static edu.ie3.netpad.tool.controller.ToolDialogs.ResolutionMode.GEOGRAPHICAL;
+import static javafx.scene.control.CheckBoxTreeItem.checkBoxSelectionChangedEvent;
 
 import edu.ie3.datamodel.models.input.container.SubGridContainer;
 import edu.ie3.datamodel.models.voltagelevels.VoltageLevel;
+import edu.ie3.netpad.exception.NetPadPlusPlusException;
 import edu.ie3.netpad.grid.controller.GridController;
 import java.util.*;
 import java.util.stream.Collectors;
 import javafx.beans.binding.Bindings;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;
 import org.controlsfx.control.CheckTreeView;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ToolDialogs {
+  private static final Logger logger = LoggerFactory.getLogger(ToolDialogs.class);
+
   protected ToolDialogs() {
     throw new IllegalStateException("Don't instantiate a class with only static methods");
   }
 
-  public static Dialog<String> fixLineLengthDialog() {
+  public static Dialog<FixLineLengthData> fixLineLengthDialog() {
     GridPane gridPane = new GridPane();
     gridPane.setHgap(10);
     gridPane.setVgap(10);
@@ -47,6 +54,7 @@ public class ToolDialogs {
 
     /* Select a subnet first */
     Label subnetLbl = new Label("Subnets: ");
+    Set<Integer> selectedSubnets = new HashSet<>(Collections.emptySet());
     if (GridController.getInstance().isGridLoaded()) {
       /* There is no grid loaded. Only display a hint on what to do. */
       Text hintTxt = new Text("Load a grid first.");
@@ -54,14 +62,15 @@ public class ToolDialogs {
     } else {
       /* List all available sub grids */
       CheckBoxTreeItem<String> root = new CheckBoxTreeItem<>("Subnets");
-      root.setExpanded(false);
+      root.setExpanded(true);
       root.setSelected(true);
 
       addToRootTreeItem(
           root,
           GridController.getInstance().getSubGrids().entrySet().parallelStream()
               .collect(
-                  Collectors.toMap(Map.Entry::getKey, v -> v.getValue().getSubGridContainer())));
+                  Collectors.toMap(Map.Entry::getKey, v -> v.getValue().getSubGridContainer())),
+          selectedSubnets);
 
       CheckTreeView<String> treeView = new CheckTreeView<>(root);
       ScrollPane scrollPane = new ScrollPane(treeView);
@@ -79,9 +88,25 @@ public class ToolDialogs {
         .disableProperty()
         .bind(Bindings.createBooleanBinding(() -> GridController.getInstance().isGridLoaded()));
 
-    Dialog<String> dialog = new Dialog<>();
+    Dialog<FixLineLengthData> dialog = new Dialog<>();
     dialog.setTitle("Resolve line length discrepancy");
     dialog.setDialogPane(dialogPane);
+
+    /* What will happen, if someone pushes a button? */
+    dialog.setResultConverter(
+        buttonType -> {
+          if (buttonType == ButtonType.OK) {
+            /* Which mode is chosen? */
+            ResolutionMode resolutionMode =
+                (ResolutionMode) tglGrp.getSelectedToggle().getUserData();
+
+            return new FixLineLengthData(resolutionMode, selectedSubnets);
+          } else if (buttonType == ButtonType.CANCEL) return null;
+          else {
+            throw new NetPadPlusPlusException(
+                "Invalid button type " + buttonType + " in csv I/O dialog.");
+          }
+        });
 
     return dialog;
   }
@@ -91,10 +116,14 @@ public class ToolDialogs {
    *
    * @param root Root entry of the check box tree
    * @param subGridContainerMap Mapping from uuid to sub grid container
+   * @param selectedSubnets Set of selected subnet items
    */
   public static void addToRootTreeItem(
-      CheckBoxTreeItem<String> root, Map<UUID, SubGridContainer> subGridContainerMap) {
-    Collection<CheckBoxTreeItem<String>> treeItems = buildTreeItems(subGridContainerMap);
+      CheckBoxTreeItem<String> root,
+      Map<UUID, SubGridContainer> subGridContainerMap,
+      Set<Integer> selectedSubnets) {
+    Collection<CheckBoxTreeItem<String>> treeItems =
+        buildTreeItems(subGridContainerMap, selectedSubnets);
     treeItems.forEach(voltageLvlChkBox -> root.getChildren().add(voltageLvlChkBox));
   }
 
@@ -102,10 +131,11 @@ public class ToolDialogs {
    * Builds all the {@link CheckBoxTreeItem}s for each voltage level
    *
    * @param subGridContainerMap Mapping from uuid to sub grid container
+   * @param selectedSubnets Set of selected subnet items
    * @return A collection of nested tree items
    */
   private static Collection<CheckBoxTreeItem<String>> buildTreeItems(
-      Map<UUID, SubGridContainer> subGridContainerMap) {
+      Map<UUID, SubGridContainer> subGridContainerMap, Set<Integer> selectedSubnets) {
     Map<VoltageLevel, CheckBoxTreeItem<String>> voltLvlToTreeItem = new HashMap<>();
 
     subGridContainerMap.forEach(
@@ -117,9 +147,25 @@ public class ToolDialogs {
 
           voltageLvlChkBox.setSelected(true);
 
+          /* Create each single subnet's checkbox */
           CheckBoxTreeItem<String> checkBoxTreeItem =
               new CheckBoxTreeItem<>(Integer.toString(subGrid.getSubnet()));
-
+          checkBoxTreeItem.addEventHandler(
+              checkBoxSelectionChangedEvent(),
+              (EventHandler<CheckBoxTreeItem.TreeModificationEvent<String>>)
+                  event -> {
+                    CheckBoxTreeItem<String> chk = event.getTreeItem();
+                    try {
+                      int subnetNumber = Integer.parseInt(chk.getValue());
+                      if (chk.isSelected()) {
+                        selectedSubnets.add(subnetNumber);
+                      } else {
+                        selectedSubnets.remove(subnetNumber);
+                      }
+                    } catch (NumberFormatException nfe) {
+                      logger.error("Unable to parse '{}' to integer.", chk.getValue());
+                    }
+                  });
           checkBoxTreeItem.setSelected(true);
 
           voltageLvlChkBox.getChildren().add(checkBoxTreeItem);
@@ -132,5 +178,46 @@ public class ToolDialogs {
   public enum ResolutionMode {
     GEOGRAPHICAL,
     ELECTRICAL
+  }
+
+  public static class FixLineLengthData {
+    private final ResolutionMode resolutionMode;
+    private final Set<Integer> affectedSubnets;
+
+    public FixLineLengthData(ResolutionMode resolutionMode, Set<Integer> affectedSubnets) {
+      this.resolutionMode = resolutionMode;
+      this.affectedSubnets = affectedSubnets;
+    }
+
+    public ResolutionMode getResolutionMode() {
+      return resolutionMode;
+    }
+
+    public Set<Integer> getAffectedSubnets() {
+      return affectedSubnets;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      FixLineLengthData that = (FixLineLengthData) o;
+      return resolutionMode == that.resolutionMode && affectedSubnets.equals(that.affectedSubnets);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(resolutionMode, affectedSubnets);
+    }
+
+    @Override
+    public String toString() {
+      return "FixLineLengthData{"
+          + "resolutionMode="
+          + resolutionMode
+          + ", affectedSubnets="
+          + affectedSubnets
+          + '}';
+    }
   }
 }

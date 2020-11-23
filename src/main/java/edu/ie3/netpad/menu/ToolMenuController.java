@@ -36,7 +36,11 @@ public class ToolMenuController implements GridEventListener {
   @FXML
   public void initialize() {
     layoutGridItem.setOnAction(event -> ToolController.getInstance().layoutGrid());
-    fixLineLengthItem.setOnAction(event -> ToolDialogs.fixLineLengthDialog().show());
+    fixLineLengthItem.setOnAction(
+        event ->
+            ToolDialogs.fixLineLengthDialog()
+                .showAndWait()
+                .ifPresent(data -> System.out.println(data)));
   }
 
   @Override
