@@ -235,11 +235,6 @@ public class GridController {
    * @param selectedSubnets Subnets to apply adjustments to
    */
   public void fixLineLength(LineLengthResolutionMode resolutionMode, Set<Integer> selectedSubnets) {
-    String gridName =
-        GridController.getInstance().getSubGrids().values().stream()
-            .findFirst()
-            .map(model -> model.getSubGridContainer().getGridName())
-            .orElse("");
     JointGridContainer updatedGrid;
 
     /* Act depending on the chosen resolution mode */
@@ -280,7 +275,7 @@ public class GridController {
                     /* Update all lines */
                     Set<LineInput> lines =
                         subGridContainer.getRawGrid().getLines().parallelStream()
-                            .map(this::setLineLengthToGeographicDistance)
+                            .map(GridController::setLineLengthToGeographicDistance)
                             .collect(Collectors.toSet());
 
                     /* Put together, what has been there before */
@@ -312,23 +307,21 @@ public class GridController {
    *
    * @param line line model to adjust
    * @return The adjusted line model
+   * @deprecated This method should be transferred to PowerSystemDataModel
    */
-  private LineInput setLineLengthToGeographicDistance(LineInput line) {
+  @Deprecated
+  private static LineInput setLineLengthToGeographicDistance(LineInput line) {
     ComparableQuantity<Length> lineLength;
-    if (Objects.nonNull(line.getGeoPosition())) {
-      lineLength =
-          lengthOfLineString(line.getGeoPosition())
-              .orElseGet(
-                  () -> {
-                    log.warn(
-                        "Cannot determine the length of the line string of line '{}' as it only contains one coordinate. Take distance between it's nodes instead.",
-                        line);
-                    return GridAndGeoUtils.distanceBetweenNodes(line.getNodeA(), line.getNodeB());
-                  });
-    } else {
-      /* Distance between both of the nodes */
-      lineLength = GridAndGeoUtils.distanceBetweenNodes(line.getNodeA(), line.getNodeB());
-    }
+    lineLength =
+        lengthOfLineString(line.getGeoPosition())
+            .orElseGet(
+                () -> {
+                  log.warn(
+                      "Cannot determine the length of the line string of line '{}' as it only contains one coordinate." +
+                              " Take distance between it's nodes instead.",
+                      line);
+                  return GridAndGeoUtils.distanceBetweenNodes(line.getNodeA(), line.getNodeB());
+                });
     return line.copy().length(lineLength).build();
   }
 
@@ -337,8 +330,10 @@ public class GridController {
    *
    * @param lineString The line string to calculate the length of
    * @return An option to the length, if it can be determined
+   * @deprecated This method should be transferred to PowerSystemUtils
    */
-  private Optional<ComparableQuantity<Length>> lengthOfLineString(LineString lineString) {
+  @Deprecated
+  private static Optional<ComparableQuantity<Length>> lengthOfLineString(LineString lineString) {
     Coordinate[] coordinates = lineString.getCoordinates();
 
     if (coordinates.length == 1) {
