@@ -12,7 +12,10 @@ import edu.ie3.datamodel.models.input.InputEntity;
 import edu.ie3.datamodel.models.input.NodeInput;
 import edu.ie3.datamodel.models.input.connector.LineInput;
 import edu.ie3.datamodel.models.input.connector.Transformer2WInput;
-import edu.ie3.datamodel.models.input.container.*;
+import edu.ie3.datamodel.models.input.container.GridContainer;
+import edu.ie3.datamodel.models.input.container.JointGridContainer;
+import edu.ie3.datamodel.models.input.container.RawGridElements;
+import edu.ie3.datamodel.models.input.container.SubGridContainer;
 import edu.ie3.datamodel.models.input.system.LoadInput;
 import edu.ie3.datamodel.models.input.system.PvInput;
 import edu.ie3.datamodel.models.input.system.StorageInput;
@@ -36,18 +39,19 @@ import edu.ie3.netpad.tool.event.LayoutGridRequestEvent;
 import edu.ie3.netpad.tool.event.LayoutGridResponse;
 import edu.ie3.netpad.tool.event.ToolEvent;
 import edu.ie3.util.geo.GeoUtils;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
-import javax.measure.quantity.Length;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tech.units.indriya.ComparableQuantity;
+
+import javax.measure.quantity.Length;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * //ToDo: Class Description
@@ -264,7 +268,7 @@ public class GridController {
   private JointGridContainer setElectricalToGeographicalLineLength(Set<Integer> selectedSubnets) {
     /* Adjust the electrical line length to be the same as the geographical distance */
     List<SubGridContainer> subGridContainers =
-        GridController.getInstance().getSubGrids().values().parallelStream()
+        subGrids.values().parallelStream()
             .map(GridModel::getSubGridContainer)
             .map(
                 subGridContainer -> {
@@ -317,8 +321,8 @@ public class GridController {
             .orElseGet(
                 () -> {
                   log.warn(
-                      "Cannot determine the length of the line string of line '{}' as it only contains one coordinate." +
-                              " Take distance between it's nodes instead.",
+                      "Cannot determine the length of the line string of line '{}' as it only contains one coordinate."
+                          + " Take distance between it's nodes instead.",
                       line);
                   return GridAndGeoUtils.distanceBetweenNodes(line.getNodeA(), line.getNodeB());
                 });
