@@ -5,6 +5,8 @@
 */
 package edu.ie3.netpad.grid.controller;
 
+import static java.lang.Math.*;
+
 import edu.ie3.datamodel.graph.SubGridGate;
 import edu.ie3.datamodel.graph.SubGridTopologyGraph;
 import edu.ie3.datamodel.models.UniqueEntity;
@@ -39,19 +41,23 @@ import edu.ie3.netpad.tool.event.LayoutGridRequestEvent;
 import edu.ie3.netpad.tool.event.LayoutGridResponse;
 import edu.ie3.netpad.tool.event.ToolEvent;
 import edu.ie3.util.geo.GeoUtils;
+import edu.ie3.util.quantities.PowerSystemUnits;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
+import javax.measure.Quantity;
+import javax.measure.quantity.Angle;
+import javax.measure.quantity.Length;
+import net.morbz.osmonaut.osm.LatLon;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tech.units.indriya.ComparableQuantity;
-
-import javax.measure.quantity.Length;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import tech.units.indriya.unit.Units;
 
 /**
  * //ToDo: Class Description
@@ -355,6 +361,49 @@ public class GridController {
     }
 
     return Optional.of(length);
+  }
+
+  /**
+   * Calculates a second coordinate in relation to a start coordinate, a bearing and a given
+   * distance. Many thanks to <a href="https://github.com/shayanjm">shayanjm<a/> for his very
+   * helpful <a href="https://gist.github.com/shayanjm/451a3242685225aa934b">Clojure-Gist</a>, which
+   * served as a blue print for this implementation
+   *
+   * @param start Start position
+   * @param distanceQty Intended distance between start and target position
+   * @param bearingQty Intended bearing between start and target position (0° points northbound,
+   *     increasing clockwise)
+   * @return The second coordinate with intended distance and bearing with reference to the start
+   *     coordinate
+   * @deprecated This better fits in {@link GeoUtils}
+   */
+  @Deprecated
+  private static LatLon secondCoordinateWithDistanceAndBearing(
+      LatLon start, Quantity<Length> distanceQty, Quantity<Angle> bearingQty) {
+    /* Do the unit conversions, so that the input complies to specifications */
+    double distance = distanceQty.to(PowerSystemUnits.KILOMETRE).getValue().doubleValue();
+    double bearing = bearingQty.to(Units.RADIAN).getValue().doubleValue();
+    double latStart = toRadians(start.getLat());
+    double longStart = toRadians(start.getLon());
+
+    /* Calculate the portion of the given distance from a full turnaround around the earth */
+    double portionOfFullTurnaround =
+        distance / GeoUtils.EARTH_RADIUS.to(PowerSystemUnits.KILOMETRE).getValue().doubleValue();
+
+    /* Calculate the target coordinate */
+    double targetLatRad =
+        asin(
+            sin(latStart) * cos(portionOfFullTurnaround)
+                + cos(latStart)
+                    * sin(portionOfFullTurnaround)
+                    * cos(bearing)); // Do not convert to degrees. Is used in second formula.
+    double targetLongRad =
+        longStart
+            + atan2(
+                sin(bearing) * sin(portionOfFullTurnaround) * cos(latStart),
+                cos(portionOfFullTurnaround) - sin(latStart) * sin(targetLatRad));
+
+    return new LatLon(toDegrees(targetLatRad), toDegrees(targetLongRad));
   }
 
   private ChangeListener<IOEvent> ioEventListener() {

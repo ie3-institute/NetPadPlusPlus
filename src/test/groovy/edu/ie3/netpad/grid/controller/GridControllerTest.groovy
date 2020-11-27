@@ -20,9 +20,11 @@ import edu.ie3.netpad.util.SampleGridFactory
 import edu.ie3.util.geo.GeoUtils
 import edu.ie3.util.quantities.PowerSystemUnits
 import edu.ie3.util.quantities.QuantityUtil
+import net.morbz.osmonaut.osm.LatLon
 import org.locationtech.jts.geom.Coordinate
 import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Unroll
 import tech.units.indriya.quantity.Quantities
 
 import javax.measure.Quantity
@@ -202,5 +204,41 @@ class GridControllerTest extends Specification {
 			assert Objects.nonNull(actualLength)
 			assert QuantityUtil.isEquivalentAbs(expectedLength, actualLength)
 		}
+	}
+
+	@Unroll
+	def "A GridController is able to determine a second position #distance km away from start with a bearing of #bearing degree."() {
+		when:
+		def actual = GridController.secondCoordinateWithDistanceAndBearing(
+				start,
+				Quantities.getQuantity(distance, PowerSystemUnits.KILOMETRE),
+				Quantities.getQuantity(bearing, PowerSystemUnits.DEGREE_GEOM)
+				)
+
+		then:
+		Math.abs(expectedPosition.getLat() - actual.getLat()) < 1E-6
+		Math.abs(expectedPosition.getLon() - actual.getLon()) < 1E-6
+
+		/* The difference between targeted and actual distance is in the order of E-13 in this test. As the above
+		 * mentioned snippet does not really point out, what the bearing is, an actual validation is quite hard. */
+
+		where:
+		start                             | bearing | distance || expectedPosition
+		new LatLon(51.4843281, 7.4116482) | 0.0     | 1.0      || new LatLon(51.493311252841195, 7.4116482)
+		new LatLon(51.4843281, 7.4116482) | 45.0    | 1.0      || new LatLon(51.490679705804766, 7.421849967564311)
+		new LatLon(51.4843281, 7.4116482) | 90.0    | 1.0      || new LatLon(51.4843281, 7.426073668191069)
+		new LatLon(51.4843281, 7.4116482) | 135.0   | 1.0      || new LatLon(51.47797560937315, 7.421847125806461)
+		new LatLon(51.4843281, 7.4116482) | 180.0   | 1.0      || new LatLon(51.4753449471588, 7.4116482)
+		new LatLon(51.4843281, 7.4116482) | 225.0   | 1.0      || new LatLon(51.47797560937315, 7.401449274193539)
+		new LatLon(51.4843281, 7.4116482) | 270.0   | 1.0      || new LatLon(51.4843281, 7.397222731808931)
+		new LatLon(51.4843281, 7.4116482) | 315.0   | 1.0      || new LatLon(51.490679705804766, 7.401446432435688)
+		new LatLon(51.4843281, 7.4116482) | 0.0     | 236.5    || new LatLon(53.60884374694267, 7.4116482)
+		new LatLon(51.4843281, 7.4116482) | 45.0    | 236.5    || new LatLon(52.9608245636982, 9.90581664831644)
+		new LatLon(51.4843281, 7.4116482) | 90.0    | 236.5    || new LatLon(51.4348704962085, 10.820806952802956)
+		new LatLon(51.4843281, 7.4116482) | 135.0   | 236.5    || new LatLon(49.958281440399226, 9.746834735372158)
+		new LatLon(51.4843281, 7.4116482) | 180.0   | 236.5    || new LatLon(49.35981245305733, 7.4116482)
+		new LatLon(51.4843281, 7.4116482) | 225.0   | 236.5    || new LatLon(49.958281440399226, 5.076461664627842)
+		new LatLon(51.4843281, 7.4116482) | 270.0   | 236.5    || new LatLon(51.4348704962085, 4.0024894471970445)
+		new LatLon(51.4843281, 7.4116482) | 315.0   | 236.5    || new LatLon(52.9608245636982, 4.91747975168356)
 	}
 }
