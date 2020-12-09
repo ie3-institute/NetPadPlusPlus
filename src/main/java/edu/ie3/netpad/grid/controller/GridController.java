@@ -256,6 +256,7 @@ public class GridController {
         break;
       case ELECTRICAL:
         updatedGrid = setGeographicalToElectricalLineLength(selectedSubnets);
+        break;
       default:
         log.error("Unknown resolution mode '{}'", resolutionMode);
         return;
@@ -272,7 +273,9 @@ public class GridController {
    *
    * @param selectedSubnets Subnets to apply adjustments to
    * @return A {@link JointGridContainer} with updated line models
+   * @deprecated This better fits in {@link GridAndGeoUtils}
    */
+  @Deprecated
   private JointGridContainer setElectricalToGeographicalLineLength(Set<Integer> selectedSubnets) {
     /* Adjust the electrical line length to be the same as the geographical distance */
     List<SubGridContainer> subGridContainers =
@@ -319,7 +322,7 @@ public class GridController {
    *
    * @param line line model to adjust
    * @return The adjusted line model
-   * @deprecated This method should be transferred to PowerSystemDataModel
+   * @deprecated This better fits in {@link GridAndGeoUtils}
    */
   @Deprecated
   private static LineInput setLineLengthToGeographicDistance(LineInput line) {
