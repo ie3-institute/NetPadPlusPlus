@@ -130,15 +130,15 @@ class GridControllerTest extends Specification {
 	def "A GridController is able to calculate the correct total length of a LineString"() {
 		given:
 		def coordinates = [
-			new Coordinate(51.49292, 7.41197),
-			new Coordinate(51.49333, 7.41183),
-			new Coordinate(51.49341, 7.41189),
-			new Coordinate(51.49391, 7.41172),
-			new Coordinate(51.49404, 7.41279)
+			new Coordinate(7.41197, 51.49292),
+			new Coordinate(7.41183, 51.49333),
+			new Coordinate(7.41189, 51.49341),
+			new Coordinate(7.41172, 51.49391),
+			new Coordinate(7.41279, 51.49404)
 		] as Coordinate[]
 
 		def lineString = GeoUtils.DEFAULT_GEOMETRY_FACTORY.createLineString(coordinates)
-		def expectedLength = Quantities.getQuantity(0.188940297821461040910483, PowerSystemUnits.KILOMETRE)
+		def expectedLength = Quantities.getQuantity(0.2372622519686716860237276, PowerSystemUnits.KILOMETRE)
 
 		when:
 		def actualLength = GridController.lengthOfLineString(lineString)
@@ -154,15 +154,15 @@ class GridControllerTest extends Specification {
 	def "A GridController is able to adjust the electrical line length to it's line string's total length"() {
 		given:
 		def coordinates = [
-			new Coordinate(51.49292, 7.41197),
-			new Coordinate(51.49333, 7.41183),
-			new Coordinate(51.49341, 7.41189),
-			new Coordinate(51.49391, 7.41172),
-			new Coordinate(51.49404, 7.41279)
+			new Coordinate(7.41197, 51.49292),
+			new Coordinate(7.41183, 51.49333),
+			new Coordinate(7.41189, 51.49341),
+			new Coordinate(7.41172, 51.49391),
+			new Coordinate(7.41279, 51.49404)
 		] as Coordinate[]
 		def lineString = GeoUtils.DEFAULT_GEOMETRY_FACTORY.createLineString(coordinates)
 		def line = testLine.copy().geoPosition(lineString).build()
-		def expectedLength = Quantities.getQuantity(0.188940297821461040910483, PowerSystemUnits.KILOMETRE)
+		def expectedLength = Quantities.getQuantity(0.2372622519686716860237276, PowerSystemUnits.KILOMETRE)
 
 		when:
 		def updateLine = GridController.setLineLengthToGeographicDistance(line)
