@@ -57,6 +57,7 @@ import org.locationtech.jts.geom.LineString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tech.units.indriya.ComparableQuantity;
+import tech.units.indriya.quantity.Quantities;
 import tech.units.indriya.unit.Units;
 
 /**
@@ -361,6 +362,46 @@ public class GridController {
     }
 
     return Optional.of(length);
+  }
+
+  /**
+   * Determine the bearing between two coordinates on the earth surface.
+   *
+   * @param latLon1 First coordinate
+   * @param latLon2 Second coordinate
+   * @return The bearing in {@link PowerSystemUnits#DEGREE_GEOM}
+   * @deprecated This better fits in {@link GeoUtils}
+   */
+  @Deprecated
+  private static ComparableQuantity<Angle> getBearing(LatLon latLon1, LatLon latLon2) {
+    double lat1Rad = toRadians(latLon1.getLat());
+    double long1Rad = toRadians(latLon1.getLon());
+    double lat2Rad = toRadians(latLon2.getLat());
+    double long2Rad = toRadians(latLon2.getLon());
+
+    /* Determine distance between both points in km */
+    double distance =
+        GeoUtils.calcHaversine(
+                latLon1.getLat(), latLon1.getLon(), latLon2.getLat(), latLon2.getLon())
+            .getValue()
+            .doubleValue();
+
+    /* Calculate the portion of the given distance from a full turnaround around the earth */
+    double portionOfFullTurnaround =
+        distance / GeoUtils.EARTH_RADIUS.to(PowerSystemUnits.KILOMETRE).getValue().doubleValue();
+
+    double bearing =
+        toDegrees(
+            asin(
+                (tan(long2Rad - long1Rad)
+                        * (cos(portionOfFullTurnaround) - sin(lat1Rad) * sin(lat2Rad)))
+                    / (sin(portionOfFullTurnaround) * cos(lat1Rad))));
+
+    /* Adapt the bearing (+/-90°) in order to meet our understanding of the bearing (0...360°) */
+    if (lat2Rad <= lat1Rad) bearing = 180 - bearing;
+    else if (long2Rad < long1Rad) bearing = 360 + bearing;
+
+    return Quantities.getQuantity(bearing, PowerSystemUnits.DEGREE_GEOM);
   }
 
   /**

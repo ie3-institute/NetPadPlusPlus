@@ -207,6 +207,36 @@ class GridControllerTest extends Specification {
 	}
 
 	@Unroll
+	def "A GridController is able to determine the bearing to #bearing degree between #latLon1 and #latLon2 correctly"() {
+		when:
+		def actual = GridController.getBearing(latLon1, latLon2)
+
+		then:
+		println("Actual bearing: " + actual + ", expected bearing: " + bearing)
+		actual.getUnit() == PowerSystemUnits.DEGREE_GEOM
+		Math.abs(bearing - actual.getValue().doubleValue()) < 1E-2
+
+		where:
+		latLon1                           | latLon2                                           || bearing
+		new LatLon(51.4843281, 7.4116482) | new LatLon(51.493311252841195, 7.4116482)         || 0.0
+		new LatLon(51.4843281, 7.4116482) | new LatLon(51.490679705804766, 7.421849967564311) || 45.0
+		new LatLon(51.4843281, 7.4116482) | new LatLon(51.4843281, 7.426073668191069)         || 90.0
+		new LatLon(51.4843281, 7.4116482) | new LatLon(51.47797560937315, 7.421847125806461)  || 135.0
+		new LatLon(51.4843281, 7.4116482) | new LatLon(51.4753449471588, 7.4116482)           || 180.0
+		new LatLon(51.4843281, 7.4116482) | new LatLon(51.47797560937315, 7.401449274193539)  || 225.0
+		new LatLon(51.4843281, 7.4116482) | new LatLon(51.4843281, 7.397222731808931)         || 270.0
+		new LatLon(51.4843281, 7.4116482) | new LatLon(51.490679705804766, 7.401446432435688) || 315.0
+		new LatLon(51.4843281, 7.4116482) | new LatLon(53.60884374694267, 7.4116482)          || 0.0
+		new LatLon(51.4843281, 7.4116482) | new LatLon(52.9608245636982, 9.90581664831644)    || 45.0
+		new LatLon(51.4843281, 7.4116482) | new LatLon(51.4348704962085, 10.820806952802956)  || 90.0
+		new LatLon(51.4843281, 7.4116482) | new LatLon(49.958281440399226, 9.746834735372158) || 135.0
+		new LatLon(51.4843281, 7.4116482) | new LatLon(49.35981245305733, 7.4116482)          || 180.0
+		new LatLon(51.4843281, 7.4116482) | new LatLon(49.958281440399226, 5.076461664627842) || 225.0
+		new LatLon(51.4843281, 7.4116482) | new LatLon(51.4348704962085, 4.0024894471970445)  || 270.0
+		new LatLon(51.4843281, 7.4116482) | new LatLon(52.9608245636982, 4.91747975168356)    || 315.0
+	}
+
+	@Unroll
 	def "A GridController is able to determine a second position #distance km away from start with a bearing of #bearing degree."() {
 		when:
 		def actual = GridController.secondCoordinateWithDistanceAndBearing(
@@ -216,6 +246,9 @@ class GridControllerTest extends Specification {
 				)
 
 		then:
+		def actualDistance = GeoUtils.calcHaversine(start.getLat(), start.getLon(), actual.getLat(), actual.getLon())
+		println("Distance: " + distance + ", actual distance: " + actualDistance + ", difference: " + actualDistance - distance)
+
 		Math.abs(expectedPosition.getLat() - actual.getLat()) < 1E-6
 		Math.abs(expectedPosition.getLon() - actual.getLon()) < 1E-6
 
