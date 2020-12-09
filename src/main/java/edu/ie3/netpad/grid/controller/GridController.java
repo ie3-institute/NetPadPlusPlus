@@ -419,16 +419,32 @@ public class GridController {
   private SubGridContainer setGeographicalToElectricalLineLength(SubGridContainer subGridContainer)
       throws GridManipulationException {
     /* Determine the slack node as the starting point of the traversal through the grid */
-    Set<NodeInput> slackNodes =
-        subGridContainer.getRawGrid().getNodes().stream()
-            .filter(NodeInput::isSlack)
+    Set<NodeInput> transformerNodes =
+        subGridContainer.getRawGrid().getTransformer2Ws().stream()
+            .map(Transformer2WInput::getNodeB)
             .collect(Collectors.toSet());
-    if (slackNodes.size() > 1)
+    transformerNodes.addAll(
+        subGridContainer.getRawGrid().getTransformer3Ws().stream()
+            .map(Transformer3WInput::getNodeB)
+            .collect(Collectors.toSet()));
+    transformerNodes.addAll(
+        subGridContainer.getRawGrid().getTransformer3Ws().stream()
+            .map(Transformer3WInput::getNodeC)
+            .collect(Collectors.toSet()));
+    if (transformerNodes.size() > 1)
       throw new GridManipulationException(
-          "There is more than one slack node in subnet '"
+          "There is more than one starting node in subnet '"
               + subGridContainer.getSubnet()
-              + "'. Currently only start topology is supported.");
-    NodeInput slackNode = slackNodes.toArray(NodeInput[]::new)[0];
+              + "'. Currently only star topology is supported.");
+    NodeInput startNode =
+        transformerNodes.stream()
+            .findFirst()
+            .orElseThrow(
+                () ->
+                    new GridManipulationException(
+                        "Cannot determine the starting node of subnet '"
+                            + subGridContainer.getSubnet()
+                            + "'."));
 
     /* Build a topology graph of lines and switches to ensure, that the sub grid is a acyclic star-type topology */
     DirectedAcyclicGraph<NodeInput, ConnectorInput> topologyGraph =
@@ -459,8 +475,8 @@ public class GridController {
     Map<UUID, NodeInput> nodeMapping =
         new HashMap<>(subGridContainer.getRawGrid().getNodes().size());
     Set<LineInput> updatedLines = new HashSet<>(subGridContainer.getRawGrid().getLines().size());
-    nodeMapping.put(slackNode.getUuid(), slackNode);
-    traverseAndUpdateLines(slackNode, topologyGraph, nodeMapping, updatedLines);
+    nodeMapping.put(startNode.getUuid(), startNode);
+    traverseAndUpdateLines(startNode, topologyGraph, nodeMapping, updatedLines);
 
     return update(subGridContainer, nodeMapping, updatedLines);
   }

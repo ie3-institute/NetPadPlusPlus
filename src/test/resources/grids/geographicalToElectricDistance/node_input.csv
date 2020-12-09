@@ -1,0 +1,8 @@
+uuid,geo_position,id,operates_from,operates_until,operator,slack,subnet,v_rated,v_target,volt_lvl
+36514e92-e6d9-4a7e-85b1-175ec6e27216,"{""type"":""Point"",""coordinates"":[7.411931,51.493045],""crs"":{""type"":""name"",""properties"":{""name"":""EPSG:4326""}}}",node_a,"","","",true,1,10.0,1.0,MV
+78beb137-45e2-43e3-8baa-1c25f0c91616,"{""type"":""Point"",""coordinates"":[7.411931,51.493045],""crs"":{""type"":""name"",""properties"":{""name"":""EPSG:4326""}}}",node_b,"","","",false,2,0.4,1.0,LV
+83586a39-8a55-4b10-a034-7ccfe6a451cb,"{""type"":""Point"",""coordinates"":[7.411728,51.493918],""crs"":{""type"":""name"",""properties"":{""name"":""EPSG:4326""}}}",node_c,"","","",false,2,0.4,1.0,LV
+a0746324-3c74-4a03-9e45-41ae2880ad8d,"{""type"":""Point"",""coordinates"":[7.411497,51.494553],""crs"":{""type"":""name"",""properties"":{""name"":""EPSG:4326""}}}",node_d,"","","",false,2,0.4,1.0,LV
+1e755e89-7bfb-4987-9bee-358ac1892313,"{""type"":""Point"",""coordinates"":[7.412838,51.494136],""crs"":{""type"":""name"",""properties"":{""name"":""EPSG:4326""}}}",node_e,"","","",false,2,0.4,1.0,LV
+7dc3d14b-3536-43b8-96f4-0f43b26854f8,"{""type"":""Point"",""coordinates"":[7.413761,51.494250],""crs"":{""type"":""name"",""properties"":{""name"":""EPSG:4326""}}}",node_f,"","","",false,2,0.4,1.0,LV
+292ea9b1-79f8-4615-bad5-c0d33b17527d,"{""type"":""Point"",""coordinates"":[7.413123,51.494791],""crs"":{""type"":""name"",""properties"":{""name"":""EPSG:4326""}}}",node_g,"","","",false,2,0.4,1.0,LV
