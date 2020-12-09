@@ -11,19 +11,19 @@ import edu.ie3.datamodel.graph.SubGridGate;
 import edu.ie3.datamodel.graph.SubGridTopologyGraph;
 import edu.ie3.datamodel.models.UniqueEntity;
 import edu.ie3.datamodel.models.input.InputEntity;
+import edu.ie3.datamodel.models.input.MeasurementUnitInput;
 import edu.ie3.datamodel.models.input.NodeInput;
-import edu.ie3.datamodel.models.input.connector.LineInput;
-import edu.ie3.datamodel.models.input.connector.Transformer2WInput;
-import edu.ie3.datamodel.models.input.container.GridContainer;
-import edu.ie3.datamodel.models.input.container.JointGridContainer;
-import edu.ie3.datamodel.models.input.container.RawGridElements;
-import edu.ie3.datamodel.models.input.container.SubGridContainer;
+import edu.ie3.datamodel.models.input.connector.*;
+import edu.ie3.datamodel.models.input.container.*;
+import edu.ie3.datamodel.models.input.graphics.LineGraphicInput;
+import edu.ie3.datamodel.models.input.graphics.NodeGraphicInput;
 import edu.ie3.datamodel.models.input.system.LoadInput;
 import edu.ie3.datamodel.models.input.system.PvInput;
 import edu.ie3.datamodel.models.input.system.StorageInput;
 import edu.ie3.datamodel.models.input.system.SystemParticipantInput;
 import edu.ie3.datamodel.utils.ContainerUtils;
 import edu.ie3.datamodel.utils.GridAndGeoUtils;
+import edu.ie3.netpad.exception.GridManipulationException;
 import edu.ie3.netpad.grid.GridModel;
 import edu.ie3.netpad.grid.GridModification;
 import edu.ie3.netpad.grid.ModifiedSubGridData;
@@ -52,6 +52,7 @@ import javax.measure.Quantity;
 import javax.measure.quantity.Angle;
 import javax.measure.quantity.Length;
 import net.morbz.osmonaut.osm.LatLon;
+import org.jgrapht.graph.DirectedAcyclicGraph;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.slf4j.Logger;
@@ -254,7 +255,7 @@ public class GridController {
         updatedGrid = setElectricalToGeographicalLineLength(selectedSubnets);
         break;
       case ELECTRICAL:
-        /* TODO CK: Figure out, what to do here */
+        updatedGrid = setGeographicalToElectricalLineLength(selectedSubnets);
       default:
         log.error("Unknown resolution mode '{}'", resolutionMode);
         return;
@@ -362,6 +363,304 @@ public class GridController {
     }
 
     return Optional.of(length);
+  }
+
+  /**
+   * Update the lines and nodes in the given joint grid container geo position
+   *
+   * @param selectedSubnets Set of selected sub grid numbers
+   * @return The updated grid container
+   * @deprecated This better fits in {@link GridAndGeoUtils}
+   */
+  @Deprecated
+  private JointGridContainer setGeographicalToElectricalLineLength(Set<Integer> selectedSubnets) {
+    /*
+     * TODO CK
+     *  1) Go through sub grid containers considering a "tree order" (from upper voltage level to lower)
+     *  2) Adapt the position of underlying grids according to the updated position of the upper grid
+     */
+
+    List<SubGridContainer> subGridContainers =
+        subGrids.values().parallelStream()
+            .map(GridModel::getSubGridContainer)
+            .map(
+                subGridContainer -> {
+                  if (selectedSubnets.contains(subGridContainer.getSubnet()))
+                    try {
+                      return setGeographicalToElectricalLineLength(subGridContainer);
+                    } catch (GridManipulationException e) {
+                      log.error(
+                          "Cannot adapt sub grid container '"
+                              + subGridContainer.getSubnet()
+                              + "'. Return the original one.",
+                          e);
+                      return subGridContainer;
+                    }
+                  else return subGridContainer;
+                })
+            .collect(Collectors.toList());
+
+    /* Assemble all sub grids to one container */
+    return ContainerUtils.combineToJointGrid(subGridContainers);
+  }
+
+  /**
+   * Go through each sub grid container and update the lines and nodes in geo position
+   *
+   * @param subGridContainer The sub grid container to adapt
+   * @return The updated grid container
+   * @throws GridManipulationException If the adaption of geographic position is not possible
+   * @deprecated This better fits in {@link GridAndGeoUtils}
+   */
+  @Deprecated
+  private SubGridContainer setGeographicalToElectricalLineLength(SubGridContainer subGridContainer)
+      throws GridManipulationException {
+    /* Determine the slack node as the starting point of the traversal through the grid */
+    Set<NodeInput> slackNodes =
+        subGridContainer.getRawGrid().getNodes().stream()
+            .filter(NodeInput::isSlack)
+            .collect(Collectors.toSet());
+    if (slackNodes.size() > 1)
+      throw new GridManipulationException(
+          "There is more than one slack node in subnet '"
+              + subGridContainer.getSubnet()
+              + "'. Currently only start topology is supported.");
+    NodeInput slackNode = slackNodes.toArray(NodeInput[]::new)[0];
+
+    /* Build a topology graph of lines and switches to ensure, that the sub grid is a acyclic star-type topology */
+    DirectedAcyclicGraph<NodeInput, ConnectorInput> topologyGraph =
+        new DirectedAcyclicGraph<>(ConnectorInput.class);
+    try {
+      subGridContainer.getRawGrid().allEntitiesAsList().stream()
+          .filter(
+              element ->
+                  LineInput.class.isAssignableFrom(element.getClass())
+                      || SwitchInput.class.isAssignableFrom(element.getClass()))
+          .map(element -> (ConnectorInput) element)
+          .forEach(
+              connector -> {
+                /* Build the topology graph */
+                topologyGraph.addVertex(connector.getNodeA());
+                topologyGraph.addVertex(connector.getNodeB());
+                topologyGraph.addEdge(connector.getNodeA(), connector.getNodeB(), connector);
+              });
+    } catch (IllegalArgumentException e) {
+      throw new GridManipulationException(
+          "The given sub grid topology of sub net '"
+              + subGridContainer.getSubnet()
+              + "' is not suitable for this operation. It has to be acyclic.",
+          e);
+    }
+
+    /* Start from the slack node and traverse downwards */
+    Map<UUID, NodeInput> nodeMapping =
+        new HashMap<>(subGridContainer.getRawGrid().getNodes().size());
+    Set<LineInput> updatedLines = new HashSet<>(subGridContainer.getRawGrid().getLines().size());
+    nodeMapping.put(slackNode.getUuid(), slackNode);
+    traverseAndUpdateLines(slackNode, topologyGraph, nodeMapping, updatedLines);
+
+    return update(subGridContainer, nodeMapping, updatedLines);
+  }
+
+  /**
+   * Traverses through the topology graph with depth-first-search and update the positions of the
+   * nodes and lines.
+   *
+   * @param startNode Node, at which the traversal starts
+   * @param topologyGraph Graph, that depicts the sub grid containers topology
+   * @param nodeMapping Mapping from "old" node's uuid to new node model
+   * @param updatedLines Collection of updated line models
+   * @throws GridManipulationException If no updated version of the given start node can be
+   *     determined
+   * @deprecated This better fits in {@link GridAndGeoUtils}
+   */
+  @Deprecated
+  private void traverseAndUpdateLines(
+      NodeInput startNode,
+      DirectedAcyclicGraph<NodeInput, ConnectorInput> topologyGraph,
+      Map<UUID, NodeInput> nodeMapping,
+      Set<LineInput> updatedLines)
+      throws GridManipulationException {
+    Set<LineInput> descendantLines =
+        topologyGraph.edgesOf(startNode).stream()
+            .filter(connector -> LineInput.class.isAssignableFrom(connector.getClass()))
+            .map(connector -> (LineInput) connector)
+            .collect(Collectors.toSet());
+    for (LineInput line : descendantLines) {
+      /* Determine the bearing (we are still operating on the "old" lines and nodes) */
+      Coordinate coordinateA = startNode.getGeoPosition().getCoordinate();
+      NodeInput nodeB = line.getNodeA() == startNode ? line.getNodeB() : line.getNodeA();
+      Coordinate coordinateB = nodeB.getGeoPosition().getCoordinate();
+      ComparableQuantity<Angle> bearing =
+          getBearing(
+              new LatLon(coordinateA.y, coordinateA.x), new LatLon(coordinateB.y, coordinateB.x));
+
+      /* Determine the new geo position */
+      NodeInput updatedNodeA = nodeMapping.get(startNode.getUuid());
+      if (Objects.isNull(updatedNodeA))
+        throw new GridManipulationException(
+            "Cannot update grid, as there is an issue with updated nodes");
+      Coordinate updatedCoordinateA = updatedNodeA.getGeoPosition().getCoordinate();
+      LatLon latLonB =
+          secondCoordinateWithDistanceAndBearing(
+              new LatLon(updatedCoordinateA.y, updatedCoordinateA.x), line.getLength(), bearing);
+
+      /* Copy node B */
+      NodeInput updatedNodeB = nodeB.copy().geoPosition(GeoUtils.latlonToPoint(latLonB)).build();
+      nodeMapping.put(nodeB.getUuid(), updatedNodeB);
+
+      /* Adapt the line */
+      LineInput updatedLine =
+          line.copy()
+              .nodeA(updatedNodeA)
+              .nodeB(updatedNodeB)
+              .geoPosition(
+                  GridAndGeoUtils.buildSafeLineStringBetweenNodes(updatedNodeA, updatedNodeB))
+              .build();
+      updatedLines.add(updatedLine);
+
+      /* Go deeper for each node */
+      Set<NodeInput> descendantNodes = topologyGraph.getDescendants(startNode);
+      for (NodeInput node : descendantNodes) {
+        traverseAndUpdateLines(node, topologyGraph, nodeMapping, updatedLines);
+      }
+    }
+  }
+
+  /**
+   * Updates the whole container by replacing the nodes in each element and set the updated lines
+   *
+   * @param container The container to update
+   * @param nodeMapping Mapping from "old" node's uuid to new node model
+   * @param updatedLines Collection of updated line models
+   * @param <C> Type of the container to update
+   * @return The updated container
+   */
+  private <C extends GridContainer> C update(
+      C container, Map<UUID, NodeInput> nodeMapping, Set<LineInput> updatedLines) {
+    /* Update the raw grid */
+    RawGridElements rawGrid = container.getRawGrid();
+    Set<NodeInput> nodes =
+        rawGrid.getNodes().stream()
+            .map(node -> nodeMapping.getOrDefault(node.getUuid(), node))
+            .collect(Collectors.toSet());
+    Set<Transformer2WInput> transformers2w =
+        rawGrid.getTransformer2Ws().stream()
+            .map(
+                transformer ->
+                    transformer
+                        .copy()
+                        .nodeA(
+                            nodeMapping.getOrDefault(
+                                transformer.getNodeA().getUuid(), transformer.getNodeA()))
+                        .nodeB(
+                            nodeMapping.getOrDefault(
+                                transformer.getNodeB().getUuid(), transformer.getNodeB()))
+                        .build())
+            .collect(Collectors.toSet());
+    Set<Transformer3WInput> transformers3w =
+        rawGrid.getTransformer3Ws().stream()
+            .map(
+                transformer ->
+                    transformer
+                        .copy()
+                        .nodeA(
+                            nodeMapping.getOrDefault(
+                                transformer.getNodeA().getUuid(), transformer.getNodeA()))
+                        .nodeB(
+                            nodeMapping.getOrDefault(
+                                transformer.getNodeB().getUuid(), transformer.getNodeB()))
+                        .nodeC(
+                            nodeMapping.getOrDefault(
+                                transformer.getNodeC().getUuid(), transformer.getNodeC()))
+                        .build())
+            .collect(Collectors.toSet());
+    Set<SwitchInput> switches =
+        rawGrid.getSwitches().stream()
+            .map(
+                switcher ->
+                    switcher
+                        .copy()
+                        .nodeA(
+                            nodeMapping.getOrDefault(
+                                switcher.getNodeA().getUuid(), switcher.getNodeA()))
+                        .nodeB(
+                            nodeMapping.getOrDefault(
+                                switcher.getNodeB().getUuid(), switcher.getNodeB()))
+                        .build())
+            .collect(Collectors.toSet());
+    Set<MeasurementUnitInput> measurements =
+        rawGrid.getMeasurementUnits().stream()
+            .map(
+                measurement ->
+                    measurement
+                        .copy()
+                        .node(
+                            nodeMapping.getOrDefault(
+                                measurement.getNode().getUuid(), measurement.getNode()))
+                        .build())
+            .collect(Collectors.toSet());
+    RawGridElements updatedRawGridElements =
+        new RawGridElements(
+            nodes, updatedLines, transformers2w, transformers3w, switches, measurements);
+
+    /* Update system participants */
+    List<SystemParticipantInput> updatedElements =
+        container.getSystemParticipants().allEntitiesAsList().stream()
+            .map(
+                participant ->
+                    participant
+                        .copy()
+                        .node(
+                            nodeMapping.getOrDefault(
+                                participant.getNode().getUuid(), participant.getNode()))
+                        .build())
+            .collect(Collectors.toList());
+    SystemParticipants updatedParticipants = new SystemParticipants(updatedElements);
+
+    /* Update graphic elements */
+    GraphicElements graphics = container.getGraphics();
+    Set<NodeGraphicInput> nodeGraphics =
+        graphics.getNodeGraphics().stream()
+            .map(
+                graphic ->
+                    graphic
+                        .copy()
+                        .node(
+                            nodeMapping.getOrDefault(
+                                graphic.getNode().getUuid(), graphic.getNode()))
+                        .build())
+            .collect(Collectors.toSet());
+    Map<UUID, LineInput> lineMapping =
+        updatedLines.stream().collect(Collectors.toMap(UniqueEntity::getUuid, line -> line));
+    Set<LineGraphicInput> lineGraphics =
+        graphics.getLineGraphics().stream()
+            .map(
+                graphic ->
+                    graphic
+                        .copy()
+                        .line(
+                            lineMapping.getOrDefault(
+                                graphic.getLine().getUuid(), graphic.getLine()))
+                        .build())
+            .collect(Collectors.toSet());
+    GraphicElements updatedGraphics = new GraphicElements(nodeGraphics, lineGraphics);
+
+    if (JointGridContainer.class.isAssignableFrom(container.getClass()))
+      return (C)
+          new JointGridContainer(
+              container.getGridName(),
+              updatedRawGridElements,
+              updatedParticipants,
+              updatedGraphics);
+    else
+      return (C)
+          new SubGridContainer(
+              container.getGridName(),
+              ((SubGridContainer) container).getSubnet(),
+              updatedRawGridElements,
+              updatedParticipants,
+              updatedGraphics);
   }
 
   /**
