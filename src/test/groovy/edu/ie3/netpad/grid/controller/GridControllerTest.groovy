@@ -24,6 +24,7 @@ import edu.ie3.util.quantities.PowerSystemUnits
 import edu.ie3.util.quantities.QuantityUtil
 import net.morbz.osmonaut.osm.LatLon
 import org.locationtech.jts.geom.Coordinate
+import org.locationtech.jts.geom.Point
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -347,6 +348,58 @@ class GridControllerTest extends Specification implements LengthAdaptionTestGrid
 		uuidToLine.size() == expectedLines.size()
 		uuidToLine.forEach { uuid, node ->
 			assert expectedLines.get(uuid) == node
+		}
+	}
+
+	def "A GridController is able to traverse a sub grid and adjust the line length"() {
+		given:
+		def subGrid = testGrid.subGridTopologyGraph
+				.vertexSet()
+				.stream()
+				.filter({ subgrid -> subgrid.getSubnet() == 2 })
+				.findFirst()
+				.orElseThrow({ -> new RuntimeException("Someone has stolen subnet 2...") })
+
+		def expectedNodeLocations = new HashMap<UUID, Point>()
+		expectedNodeLocations.put(UUID.fromString("36514e92-e6d9-4a7e-85b1-175ec6e27216"), GeoUtils.DEFAULT_GEOMETRY_FACTORY.createPoint(new Coordinate(7.411931,51.493045)))
+		expectedNodeLocations.put(UUID.fromString("78beb137-45e2-43e3-8baa-1c25f0c91616"), GeoUtils.DEFAULT_GEOMETRY_FACTORY.createPoint(new Coordinate(7.411931,51.493045)))
+		expectedNodeLocations.put(UUID.fromString("83586a39-8a55-4b10-a034-7ccfe6a451cb"), GeoUtils.DEFAULT_GEOMETRY_FACTORY.createPoint(new Coordinate(7.406760294855038, 51.51527105298355)))
+		expectedNodeLocations.put(UUID.fromString("a0746324-3c74-4a03-9e45-41ae2880ad8d"), GeoUtils.DEFAULT_GEOMETRY_FACTORY.createPoint(new Coordinate(7.398784924455003, 51.53717392365705)))
+		expectedNodeLocations.put(UUID.fromString("1e755e89-7bfb-4987-9bee-358ac1892313"), GeoUtils.DEFAULT_GEOMETRY_FACTORY.createPoint(new Coordinate(7.441181742043899, 51.5220222908142)))
+		expectedNodeLocations.put(UUID.fromString("7dc3d14b-3536-43b8-96f4-0f43b26854f8"), GeoUtils.DEFAULT_GEOMETRY_FACTORY.createPoint(new Coordinate(7.476588680897974, 51.52638713859204)))
+		expectedNodeLocations.put(UUID.fromString("292ea9b1-79f8-4615-bad5-c0d33b17527d"), GeoUtils.DEFAULT_GEOMETRY_FACTORY.createPoint(new Coordinate(7.45062367268736, 51.54369850948029)))
+
+		when:
+		def actual = GridController.instance.setGeographicalToElectricalLineLength(subGrid)
+
+		then:
+		"all line length differ less than 1mm and line string as well as nodes do match"
+		actual.getRawGrid().getLines().forEach {
+			def pointA = it.getNodeA().getGeoPosition()
+			def pointB = it.getNodeB().getGeoPosition()
+			def geographicalDistance = GeoUtils.calcHaversine(pointA.y, pointA.x, pointB.y, pointB.x)
+
+			assert QuantityUtil.isEquivalentAbs(geographicalDistance, it.length, 10E-6)
+
+			def lineStringStart = it.getGeoPosition().getStartPoint()
+			def lineStringEnd = it.getGeoPosition().getEndPoint()
+
+			assert (
+			lineStringStart.equalsExact(pointA, 1E-6)
+			&& lineStringEnd.equalsExact(pointB, 1E-6)
+			) || (
+			lineStringStart.equalsExact(pointB, 1E-6)
+			&& lineStringEnd.equalsExact(pointA, 1E-6)
+			)
+		}
+
+		"all nodes are at it's foreseen place"
+		actual.getRawGrid().getNodes().forEach {
+			def expectedPosition = expectedNodeLocations.get(it.getUuid())
+			if (Objects.isNull(expectedPosition))
+				throw new RuntimeException("Somebody has stolen the expected position of '" + it + "'")
+
+			assert expectedPosition.equalsExact(it.geoPosition, 1E-6)
 		}
 	}
 }
