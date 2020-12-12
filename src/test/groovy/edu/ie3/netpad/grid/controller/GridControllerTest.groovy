@@ -24,7 +24,6 @@ import edu.ie3.util.quantities.PowerSystemUnits
 import edu.ie3.util.quantities.QuantityUtil
 import net.morbz.osmonaut.osm.LatLon
 import org.locationtech.jts.geom.Coordinate
-import org.locationtech.jts.geom.Point
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -125,7 +124,7 @@ class GridControllerTest extends Specification implements LengthAdaptionTestGrid
 
 		def subGridUuid = GridController.instance.findSubGridUuid(validMapping, sampleGrid)
 
-		subGridUuid.isPresent()
+		subGridUuid.present
 		subGridUuid == Optional.of(gridUuid)
 	}
 
@@ -146,7 +145,7 @@ class GridControllerTest extends Specification implements LengthAdaptionTestGrid
 		def actualLength = GridController.lengthOfLineString(lineString)
 
 		then:
-		actualLength.isPresent()
+		actualLength.present
 		QuantityUtil.isEquivalentAbs(actualLength.get(), expectedLength)
 	}
 
@@ -170,7 +169,7 @@ class GridControllerTest extends Specification implements LengthAdaptionTestGrid
 		def updateLine = GridController.setLineLengthToGeographicDistance(line)
 
 		then:
-		QuantityUtil.isEquivalentAbs(updateLine.getLength(), expectedLength)
+		QuantityUtil.isEquivalentAbs(updateLine.length, expectedLength)
 	}
 
 	def "A GridController is capable of adjusting the electrical line length to actual length within a selected subnet"() {
@@ -179,16 +178,17 @@ class GridControllerTest extends Specification implements LengthAdaptionTestGrid
 		def sampleGrid = SampleGridFactory.sampleJointGrid()
 		IoController.instance.notifyListener(new ReadGridEvent(sampleGrid))
 
-		def expectedLineLengths = new HashMap()
-		/* subnet 1 */
-		expectedLineLengths.put(UUID.fromString("92ec3bcf-1777-4d38-af67-0bf7c9fa73c7"), Quantities.getQuantity(0.13570403123164909653797, PowerSystemUnits.KILOMETRE))
-		expectedLineLengths.put(UUID.fromString("4dd1bde7-0ec9-4540-ac9e-008bc5f883ba"), Quantities.getQuantity(0.065091844094861731826615, PowerSystemUnits.KILOMETRE))
-		expectedLineLengths.put(UUID.fromString("d0f36763-c11e-46a4-bf6b-e57fb06fd8d8"), Quantities.getQuantity(0.11430643088441233981695, PowerSystemUnits.KILOMETRE))
+		def expectedLineLengths = [
+			/* subnet 1 */
+			(UUID.fromString("92ec3bcf-1777-4d38-af67-0bf7c9fa73c7")): Quantities.getQuantity(0.13570403123164909653797, PowerSystemUnits.KILOMETRE),
+			(UUID.fromString("4dd1bde7-0ec9-4540-ac9e-008bc5f883ba")): Quantities.getQuantity(0.065091844094861731826615, PowerSystemUnits.KILOMETRE),
+			(UUID.fromString("d0f36763-c11e-46a4-bf6b-e57fb06fd8d8")): Quantities.getQuantity(0.11430643088441233981695, PowerSystemUnits.KILOMETRE),
 
-		/* subnet 2 (will be unchanged) */
-		expectedLineLengths.put(UUID.fromString("b83b93ed-7468-47c2-aed9-48e554c428c7"), Quantities.getQuantity(1.11308358844200193288058, PowerSystemUnits.KILOMETRE))
-		expectedLineLengths.put(UUID.fromString("571e8b88-dd9d-4542-89ed-b7f37916d775"), Quantities.getQuantity(2.65621973769665467422535, PowerSystemUnits.KILOMETRE))
-		expectedLineLengths.put(UUID.fromString("7197e24f-97cd-4764-ae22-40cdc2f26dd2"), Quantities.getQuantity(1.82710747893781441715269, PowerSystemUnits.KILOMETRE))
+			/* subnet 2 (will be unchanged) */
+			(UUID.fromString("b83b93ed-7468-47c2-aed9-48e554c428c7")): Quantities.getQuantity(1.11308358844200193288058, PowerSystemUnits.KILOMETRE),
+			(UUID.fromString("571e8b88-dd9d-4542-89ed-b7f37916d775")): Quantities.getQuantity(2.65621973769665467422535, PowerSystemUnits.KILOMETRE),
+			(UUID.fromString("7197e24f-97cd-4764-ae22-40cdc2f26dd2")): Quantities.getQuantity(1.82710747893781441715269, PowerSystemUnits.KILOMETRE),
+		]
 
 		def selectedSubnets = [1] as Set
 
@@ -214,9 +214,8 @@ class GridControllerTest extends Specification implements LengthAdaptionTestGrid
 		def actual = GridController.getBearing(latLon1, latLon2)
 
 		then:
-		println("Actual bearing: " + actual + ", expected bearing: " + bearing)
-		actual.getUnit() == PowerSystemUnits.DEGREE_GEOM
-		Math.abs(bearing - actual.getValue().doubleValue()) < 1E-2
+		actual.unit == PowerSystemUnits.DEGREE_GEOM
+		Math.abs(bearing - actual.value.doubleValue()) < 1E-2
 
 		where:
 		latLon1                           | latLon2                                           || bearing
@@ -248,11 +247,8 @@ class GridControllerTest extends Specification implements LengthAdaptionTestGrid
 				)
 
 		then:
-		def actualDistance = GeoUtils.calcHaversine(start.getLat(), start.getLon(), actual.getLat(), actual.getLon())
-		println("Distance: " + distance + ", actual distance: " + actualDistance + ", difference: " + actualDistance - distance)
-
-		Math.abs(expectedPosition.getLat() - actual.getLat()) < 1E-6
-		Math.abs(expectedPosition.getLon() - actual.getLon()) < 1E-6
+		Math.abs(expectedPosition.lat - actual.lat) < 1E-6
+		Math.abs(expectedPosition.lon - actual.lon) < 1E-6
 
 		/* The difference between targeted and actual distance is in the order of E-13 in this test. As the above
 		 * mentioned snippet does not really point out, what the bearing is, an actual validation is quite hard. */
@@ -283,26 +279,27 @@ class GridControllerTest extends Specification implements LengthAdaptionTestGrid
 
 		def updatedNodeA = nodeA.copy().subnet(3).build()
 		def nodeMapping = new HashMap<UUID, NodeInput>()
-		nodeMapping.put(updatedNodeA.getUuid(), updatedNodeA)
+		nodeMapping.put(updatedNodeA.uuid, updatedNodeA)
 
-		def expectedNodes = new HashMap<UUID, NodeInput>()
-		expectedNodes.put(nodeA.getUuid(), updatedNodeA)
-		expectedNodes.put(nodeB.getUuid(), nodeB)
-		expectedNodes.put(nodeC.getUuid(), nodeC)
-		expectedNodes.put(nodeD.getUuid(), nodeD)
-		expectedNodes.put(nodeE.getUuid(), nodeE)
-		expectedNodes.put(nodeF.getUuid(), nodeF)
-		expectedNodes.put(nodeG.getUuid(), nodeG)
+		def expectedNodes = [
+			(nodeA.uuid): updatedNodeA,
+			(nodeB.uuid): nodeB,
+			(nodeC.uuid): nodeC,
+			(nodeD.uuid): nodeD,
+			(nodeE.uuid): nodeE,
+			(nodeF.uuid): nodeF,
+			(nodeG.uuid): nodeG
+		]
 
 		when:
 		def actual = GridController.instance.update(testGrid as GridContainer, nodeMapping, [] as Set<LineInput>)
 		def uuidToNode = actual
-				.getRawGrid()
-				.getNodes()
+				.rawGrid
+				.nodes
 				.stream()
 				.collect(
 				Collectors.toMap(
-				{ node -> ((NodeInput) node).getUuid() }, { node ->
+				{ node -> ((NodeInput) node).uuid }, { node ->
 					((NodeInput) node)
 				}
 				)
@@ -324,21 +321,21 @@ class GridControllerTest extends Specification implements LengthAdaptionTestGrid
 		updatedLines.add(updatedLineCD)
 
 		def expectedLines = new HashMap<UUID, LineInput>()
-		expectedLines.put(lineBC.getUuid(), updatedLineBC)
-		expectedLines.put(lineCD.getUuid(), updatedLineCD)
-		expectedLines.put(lineCE.getUuid(), lineCE)
-		expectedLines.put(lineEF.getUuid(), lineEF)
-		expectedLines.put(lineEG.getUuid(), lineEG)
+		expectedLines.put(lineBC.uuid, updatedLineBC)
+		expectedLines.put(lineCD.uuid, updatedLineCD)
+		expectedLines.put(lineCE.uuid, lineCE)
+		expectedLines.put(lineEF.uuid, lineEF)
+		expectedLines.put(lineEG.uuid, lineEG)
 
 		when:
 		def actual = GridController.instance.update(testGrid as GridContainer, [:] as Map<UUID, NodeInput>, updatedLines)
 		def uuidToLine = actual
-				.getRawGrid()
-				.getLines()
+				.rawGrid
+				.lines
 				.stream()
 				.collect(
 				Collectors.toMap(
-				{ line -> ((LineInput) line).getUuid() }, { line ->
+				{ line -> ((LineInput) line).uuid }, { line ->
 					((LineInput) line)
 				}
 				)
@@ -356,33 +353,34 @@ class GridControllerTest extends Specification implements LengthAdaptionTestGrid
 		def subGrid = testGrid.subGridTopologyGraph
 				.vertexSet()
 				.stream()
-				.filter({ subgrid -> subgrid.getSubnet() == 2 })
+				.filter({ subgrid -> subgrid.subnet == 2 })
 				.findFirst()
 				.orElseThrow({ -> new RuntimeException("Someone has stolen subnet 2...") })
 
-		def expectedNodeLocations = new HashMap<UUID, Point>()
-		expectedNodeLocations.put(UUID.fromString("36514e92-e6d9-4a7e-85b1-175ec6e27216"), GeoUtils.DEFAULT_GEOMETRY_FACTORY.createPoint(new Coordinate(7.411931,51.493045)))
-		expectedNodeLocations.put(UUID.fromString("78beb137-45e2-43e3-8baa-1c25f0c91616"), GeoUtils.DEFAULT_GEOMETRY_FACTORY.createPoint(new Coordinate(7.411931,51.493045)))
-		expectedNodeLocations.put(UUID.fromString("83586a39-8a55-4b10-a034-7ccfe6a451cb"), GeoUtils.DEFAULT_GEOMETRY_FACTORY.createPoint(new Coordinate(7.406760294855038, 51.51527105298355)))
-		expectedNodeLocations.put(UUID.fromString("a0746324-3c74-4a03-9e45-41ae2880ad8d"), GeoUtils.DEFAULT_GEOMETRY_FACTORY.createPoint(new Coordinate(7.398784924455003, 51.53717392365705)))
-		expectedNodeLocations.put(UUID.fromString("1e755e89-7bfb-4987-9bee-358ac1892313"), GeoUtils.DEFAULT_GEOMETRY_FACTORY.createPoint(new Coordinate(7.441181742043899, 51.5220222908142)))
-		expectedNodeLocations.put(UUID.fromString("7dc3d14b-3536-43b8-96f4-0f43b26854f8"), GeoUtils.DEFAULT_GEOMETRY_FACTORY.createPoint(new Coordinate(7.476588680897974, 51.52638713859204)))
-		expectedNodeLocations.put(UUID.fromString("292ea9b1-79f8-4615-bad5-c0d33b17527d"), GeoUtils.DEFAULT_GEOMETRY_FACTORY.createPoint(new Coordinate(7.45062367268736, 51.54369850948029)))
+		def expectedNodeLocations = [
+			(UUID.fromString("36514e92-e6d9-4a7e-85b1-175ec6e27216")): GeoUtils.DEFAULT_GEOMETRY_FACTORY.createPoint(new Coordinate(7.411931, 51.493045)),
+			(UUID.fromString("78beb137-45e2-43e3-8baa-1c25f0c91616")): GeoUtils.DEFAULT_GEOMETRY_FACTORY.createPoint(new Coordinate(7.411931, 51.493045)),
+			(UUID.fromString("83586a39-8a55-4b10-a034-7ccfe6a451cb")): GeoUtils.DEFAULT_GEOMETRY_FACTORY.createPoint(new Coordinate(7.406760294855038, 51.51527105298355)),
+			(UUID.fromString("a0746324-3c74-4a03-9e45-41ae2880ad8d")): GeoUtils.DEFAULT_GEOMETRY_FACTORY.createPoint(new Coordinate(7.398784924455003, 51.53717392365705)),
+			(UUID.fromString("1e755e89-7bfb-4987-9bee-358ac1892313")): GeoUtils.DEFAULT_GEOMETRY_FACTORY.createPoint(new Coordinate(7.441181742043899, 51.5220222908142)),
+			(UUID.fromString("7dc3d14b-3536-43b8-96f4-0f43b26854f8")): GeoUtils.DEFAULT_GEOMETRY_FACTORY.createPoint(new Coordinate(7.476588680897974, 51.52638713859204)),
+			(UUID.fromString("292ea9b1-79f8-4615-bad5-c0d33b17527d")): GeoUtils.DEFAULT_GEOMETRY_FACTORY.createPoint(new Coordinate(7.45062367268736, 51.54369850948029))
+		]
 
 		when:
 		def actual = GridController.instance.setGeographicalToElectricalLineLength(subGrid)
 
 		then:
 		"all line length differ less than 1mm and line string as well as nodes do match"
-		actual.getRawGrid().getLines().forEach {
-			def pointA = it.getNodeA().getGeoPosition()
-			def pointB = it.getNodeB().getGeoPosition()
+		actual.rawGrid.lines.forEach {
+			def pointA = it.nodeA.geoPosition
+			def pointB = it.nodeB.geoPosition
 			def geographicalDistance = GeoUtils.calcHaversine(pointA.y, pointA.x, pointB.y, pointB.x)
 
 			assert QuantityUtil.isEquivalentAbs(geographicalDistance, it.length, 10E-6)
 
-			def lineStringStart = it.getGeoPosition().getStartPoint()
-			def lineStringEnd = it.getGeoPosition().getEndPoint()
+			def lineStringStart = it.geoPosition.startPoint
+			def lineStringEnd = it.geoPosition.endPoint
 
 			assert (
 			lineStringStart.equalsExact(pointA, 1E-6)
@@ -394,8 +392,8 @@ class GridControllerTest extends Specification implements LengthAdaptionTestGrid
 		}
 
 		"all nodes are at it's foreseen place"
-		actual.getRawGrid().getNodes().forEach {
-			def expectedPosition = expectedNodeLocations.get(it.getUuid())
+		actual.rawGrid.nodes.forEach {
+			def expectedPosition = expectedNodeLocations.get(it.uuid)
 			if (Objects.isNull(expectedPosition))
 				throw new RuntimeException("Somebody has stolen the expected position of '" + it + "'")
 
