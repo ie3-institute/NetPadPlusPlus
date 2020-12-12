@@ -38,8 +38,6 @@ public class MainController implements GridEventListener {
 
   @FXML private MainMenuBarController mainMenuBarController;
 
-  private final GridController gridController;
-
   private final ChangeListener<GridEvent> gridEventListener;
 
   private boolean gridInfoActive = false;
@@ -48,7 +46,6 @@ public class MainController implements GridEventListener {
   private final DoubleProperty gridInfoDividerPosition = new SimpleDoubleProperty(0.25);
 
   public MainController() {
-    this.gridController = new GridController();
     this.gridEventListener = ListenerUtil.createGridEventListener(this);
   }
 
@@ -109,10 +106,12 @@ public class MainController implements GridEventListener {
             gridInfoController.gridEventListener(),
             mainMenuBarController.getToolMenuController().gridEventListener(),
             this.gridEventListener())
-        .forEach(gridController.gridUpdateEvents()::addListener);
+        .forEach(GridController.getInstance().gridUpdateEvents()::addListener);
 
     /* register listener that receive updates from map controller (e.g. dragged nodes) */
-    mapController.mapUpdateEvents().addListener(gridController.gridMapEventListener());
+    mapController
+        .mapUpdateEvents()
+        .addListener(GridController.getInstance().gridMapEventListener());
 
     /* register listener that receive updates from gridInfoController*/
     gridInfoController.gridInfoEvents().addListener(mapController.gridInfoEventListener());

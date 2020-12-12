@@ -266,7 +266,7 @@ public class SampleGridFactory {
             GermanVoltageLevelUtils.LV,
             1);
 
-    LineTypeInput lv_lineType =
+    LineTypeInput lvLineType =
         new LineTypeInput(
             UUID.fromString("3bed3eb3-9790-4874-89b5-a5434d408088"),
             "lineType_AtoB",
@@ -286,35 +286,35 @@ public class SampleGridFactory {
             nodeA,
             nodeB,
             1,
-            lv_lineType,
+            lvLineType,
             GridAndGeoUtils.distanceBetweenNodes(nodeA, nodeB),
             GridAndGeoUtils.buildSafeLineStringBetweenNodes(nodeA, nodeB),
             OlmCharacteristicInput.CONSTANT_CHARACTERISTIC);
 
     LineInput lineAC =
         new LineInput(
-            UUID.fromString("93ec3bcf-1777-4d38-af67-0bf7c9fa73c7"),
+            UUID.fromString("d0f36763-c11e-46a4-bf6b-e57fb06fd8d8"),
             "lineAtoC",
             OperatorInput.NO_OPERATOR_ASSIGNED,
             OperationTime.notLimited(),
             nodeA,
             nodeC,
             1,
-            lv_lineType,
+            lvLineType,
             GridAndGeoUtils.distanceBetweenNodes(nodeA, nodeC),
             GridAndGeoUtils.buildSafeLineStringBetweenNodes(nodeA, nodeC),
             OlmCharacteristicInput.CONSTANT_CHARACTERISTIC);
 
     LineInput lineBC =
         new LineInput(
-            UUID.fromString("94ec3bcf-1777-4d38-af67-0bf7c9fa73c7"),
+            UUID.fromString("4dd1bde7-0ec9-4540-ac9e-008bc5f883ba"),
             "lineBtoC",
             OperatorInput.NO_OPERATOR_ASSIGNED,
             OperationTime.notLimited(),
             nodeB,
             nodeC,
             1,
-            lv_lineType,
+            lvLineType,
             GridAndGeoUtils.distanceBetweenNodes(nodeB, nodeC),
             GridAndGeoUtils.buildSafeLineStringBetweenNodes(nodeB, nodeC),
             OlmCharacteristicInput.CONSTANT_CHARACTERISTIC);
@@ -334,7 +334,7 @@ public class SampleGridFactory {
 
     NodeInput nodeE =
         new NodeInput(
-            UUID.fromString("10aec636-791b-45aa-b981-b14edf171c4c"),
+            UUID.fromString("35dc7348-2602-4c4a-99fb-1d1bbc76ec6a"),
             "nodeE",
             OperatorInput.NO_OPERATOR_ASSIGNED,
             OperationTime.notLimited(),
@@ -348,7 +348,7 @@ public class SampleGridFactory {
 
     NodeInput nodeF =
         new NodeInput(
-            UUID.fromString("11aec636-791b-45aa-b981-b14edf171c4c"),
+            UUID.fromString("211ccf5b-58ee-4c3c-8165-852b0c9255ef"),
             "nodeF",
             OperatorInput.NO_OPERATOR_ASSIGNED,
             OperationTime.notLimited(),
@@ -362,7 +362,7 @@ public class SampleGridFactory {
 
     NodeInput nodeG =
         new NodeInput(
-            UUID.fromString("12aec637-791b-45aa-b981-b14edf171c4c"),
+            UUID.fromString("30c48ca2-9cfe-423b-bf8c-3adbc6ab496b"),
             "nodeG",
             OperatorInput.NO_OPERATOR_ASSIGNED,
             OperationTime.notLimited(),
@@ -372,7 +372,7 @@ public class SampleGridFactory {
             GermanVoltageLevelUtils.EHV_220KV,
             4);
 
-    LineTypeInput mv_lineType =
+    LineTypeInput mvLineType =
         new LineTypeInput(
             UUID.fromString("4bed3eb3-9790-4874-89b5-a5434d408088"),
             "lineType_AtoB",
@@ -385,49 +385,49 @@ public class SampleGridFactory {
 
     LineInput lineDE =
         new LineInput(
-            UUID.fromString("99ec3bcf-1777-4d38-af67-0bf7c9fa73c7"),
+            UUID.fromString("571e8b88-dd9d-4542-89ed-b7f37916d775"),
             "lineDtoE",
             OperatorInput.NO_OPERATOR_ASSIGNED,
             OperationTime.notLimited(),
             nodeD,
             nodeE,
             1,
-            mv_lineType,
+            mvLineType,
             GridAndGeoUtils.distanceBetweenNodes(nodeD, nodeE),
             GridAndGeoUtils.buildSafeLineStringBetweenNodes(nodeD, nodeE),
             OlmCharacteristicInput.CONSTANT_CHARACTERISTIC);
 
     LineInput lineEF =
         new LineInput(
-            UUID.fromString("99fc3bcf-1777-4d38-af67-0bf7c9fa73c7"),
+            UUID.fromString("b83b93ed-7468-47c2-aed9-48e554c428c7"),
             "lineEtoF",
             OperatorInput.NO_OPERATOR_ASSIGNED,
             OperationTime.notLimited(),
             nodeE,
             nodeF,
             1,
-            mv_lineType,
+            mvLineType,
             GridAndGeoUtils.distanceBetweenNodes(nodeE, nodeF),
             GridAndGeoUtils.buildSafeLineStringBetweenNodes(nodeE, nodeF),
             OlmCharacteristicInput.CONSTANT_CHARACTERISTIC);
 
     LineInput lineDF =
         new LineInput(
-            UUID.fromString("60ec3bcf-1777-4d38-af67-0bf7c9fa73c7"),
+            UUID.fromString("7197e24f-97cd-4764-ae22-40cdc2f26dd2"),
             "lineDtoF",
             OperatorInput.NO_OPERATOR_ASSIGNED,
             OperationTime.notLimited(),
             nodeD,
             nodeF,
             1,
-            mv_lineType,
+            mvLineType,
             GridAndGeoUtils.distanceBetweenNodes(nodeD, nodeF),
             GridAndGeoUtils.buildSafeLineStringBetweenNodes(nodeD, nodeF),
             OlmCharacteristicInput.CONSTANT_CHARACTERISTIC);
 
     // transformers
 
-    Transformer2WTypeInput transformerType_LV_MV_10KV =
+    Transformer2WTypeInput transformerTypeLvMv10Kv =
         new Transformer2WTypeInput(
             UUID.fromString("08559390-d7c0-4427-a2dc-97ba312ae0ac"),
             "MS-NS_1",
@@ -454,20 +454,20 @@ public class SampleGridFactory {
             nodeD,
             nodeA,
             1,
-            transformerType_LV_MV_10KV,
+            transformerTypeLvMv10Kv,
             0,
             false);
 
     Transformer2WInput transformerGtoD =
         new Transformer2WInput(
-            UUID.fromString("58257de7-f297-4d9b-a5e4-b662c058c655"),
+            UUID.fromString("d75b93d0-5d8d-43e5-81a1-8cef01aec56d"),
             "transformerAtoD",
             OperatorInput.NO_OPERATOR_ASSIGNED,
             OperationTime.notLimited(),
             nodeG,
             nodeD,
             1,
-            transformerType_LV_MV_10KV,
+            transformerTypeLvMv10Kv,
             0,
             false);
 

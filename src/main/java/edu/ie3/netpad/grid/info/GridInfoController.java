@@ -7,6 +7,7 @@ package edu.ie3.netpad.grid.info;
 
 import static javafx.scene.control.CheckBoxTreeItem.checkBoxSelectionChangedEvent;
 
+import edu.ie3.datamodel.models.input.container.SubGridContainer;
 import edu.ie3.datamodel.models.voltagelevels.VoltageLevel;
 import edu.ie3.netpad.grid.event.GridEvent;
 import edu.ie3.netpad.grid.event.GridEventListener;
@@ -40,7 +41,6 @@ public class GridInfoController implements GridEventListener {
 
   private final ChangeListener<GridEvent> gridEventListener =
       ListenerUtil.createGridEventListener(this);
-  private final HashMap<CheckBoxTreeItem<String>, UUID> subGridCheckBoxes = new HashMap<>();
 
   private final ObjectProperty<GridInfoEvent> gridInfoEventProperty = new SimpleObjectProperty<>();
 
@@ -69,40 +69,60 @@ public class GridInfoController implements GridEventListener {
 
     selectedGridCheckTreeView.setRoot(root);
 
-    Map<VoltageLevel, CheckBoxTreeItem<String>> voltageLvls = new HashMap<>();
+    addToRootTreeItem(root, gridEvent.getSubGrids());
+  }
 
-    gridEvent
-        .getSubGrids()
-        .forEach(
-            (uuid, subGrid) -> {
-              CheckBoxTreeItem<String> voltageLvlChkBox =
-                  Optional.ofNullable(voltageLvls.get(subGrid.getPredominantVoltageLevel()))
-                      .orElseGet(
-                          () ->
-                              new CheckBoxTreeItem<>(subGrid.getPredominantVoltageLevel().getId()));
+  /**
+   * Adds {@link CheckBoxTreeItem}s for each voltage level
+   *
+   * @param root Root entry of the check box tree
+   * @param subGridContainerMap Mapping from uuid to sub grid container
+   */
+  public void addToRootTreeItem(
+      CheckBoxTreeItem<String> root, Map<UUID, SubGridContainer> subGridContainerMap) {
+    Collection<CheckBoxTreeItem<String>> treeItems = buildTreeItems(subGridContainerMap);
+    treeItems.forEach(voltageLvlChkBox -> root.getChildren().add(voltageLvlChkBox));
+  }
 
-              voltageLvlChkBox.setSelected(true);
+  /**
+   * Builds all the {@link CheckBoxTreeItem}s for each voltage level
+   *
+   * @param subGridContainerMap Mapping from uuid to sub grid container
+   * @return A collection of nested tree items
+   */
+  private Collection<CheckBoxTreeItem<String>> buildTreeItems(
+      Map<UUID, SubGridContainer> subGridContainerMap) {
+    Map<VoltageLevel, CheckBoxTreeItem<String>> voltLvlToTreeItem = new HashMap<>();
+    HashMap<CheckBoxTreeItem<String>, UUID> subGridCheckBoxes = new HashMap<>();
 
-              CheckBoxTreeItem<String> checkBoxTreeItem =
-                  new CheckBoxTreeItem<>(Integer.toString(subGrid.getSubnet()));
+    subGridContainerMap.forEach(
+        (uuid, subGrid) -> {
+          CheckBoxTreeItem<String> voltageLvlChkBox =
+              Optional.ofNullable(voltLvlToTreeItem.get(subGrid.getPredominantVoltageLevel()))
+                  .orElseGet(
+                      () -> new CheckBoxTreeItem<>(subGrid.getPredominantVoltageLevel().getId()));
 
-              checkBoxTreeItem.setSelected(true);
-              checkBoxTreeItem.addEventHandler(
-                  checkBoxSelectionChangedEvent(),
-                  (EventHandler<CheckBoxTreeItem.TreeModificationEvent<String>>)
-                      event -> {
-                        CheckBoxTreeItem<String> chk = event.getTreeItem();
-                        UUID subGridUUID = subGridCheckBoxes.get(chk);
-                        notifyListener(new GridInfoEvent(subGridUUID, chk.isSelected()));
-                      });
+          voltageLvlChkBox.setSelected(true);
 
-              voltageLvlChkBox.getChildren().add(checkBoxTreeItem);
+          CheckBoxTreeItem<String> checkBoxTreeItem =
+              new CheckBoxTreeItem<>(Integer.toString(subGrid.getSubnet()));
 
-              voltageLvls.put(subGrid.getPredominantVoltageLevel(), voltageLvlChkBox);
-              subGridCheckBoxes.put(checkBoxTreeItem, uuid);
-            });
+          checkBoxTreeItem.setSelected(true);
+          checkBoxTreeItem.addEventHandler(
+              checkBoxSelectionChangedEvent(),
+              (EventHandler<CheckBoxTreeItem.TreeModificationEvent<String>>)
+                  event -> {
+                    CheckBoxTreeItem<String> chk = event.getTreeItem();
+                    UUID subGridUUID = subGridCheckBoxes.get(chk);
+                    notifyListener(new GridInfoEvent(subGridUUID, chk.isSelected()));
+                  });
 
-    voltageLvls.values().forEach(voltageLvlChkBox -> root.getChildren().add(voltageLvlChkBox));
+          voltageLvlChkBox.getChildren().add(checkBoxTreeItem);
+
+          voltLvlToTreeItem.put(subGrid.getPredominantVoltageLevel(), voltageLvlChkBox);
+          subGridCheckBoxes.put(checkBoxTreeItem, uuid);
+        });
+    return voltLvlToTreeItem.values();
   }
 
   public ObjectProperty<GridInfoEvent> gridInfoEvents() {

@@ -1,45 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Menu?>
-<?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.SeparatorMenuItem?>
-<?import javafx.scene.layout.VBox?>
 
-<!--<VBox fx:id="fileMenu" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1"-->
-<!--      fx:controller="edu.ie3.netpad.menu.FileMenuController">-->
+<Menu mnemonicParsing="false" text="File" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="edu.ie3.netpad.menu.FileMenuController">
 
-<!--    <MenuBar>-->
-        <Menu mnemonicParsing="false" text="File" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1"
-              fx:controller="edu.ie3.netpad.menu.FileMenuController">
+    <MenuItem fx:id="createEmptyGridInputModelItem" disable="true" mnemonicParsing="false"
+              text="Create empty GridInputModel"/>
 
-            <MenuItem fx:id="createEmptyGridInputModelItem" disable="true" mnemonicParsing="false"
-                      text="Create empty GridInputModel"/>
+    <MenuItem fx:id="createSampleGridInputModelItem" mnemonicParsing="false"
+              text="Create sample GridInputModel"/>
 
-            <MenuItem fx:id="createSampleGridInputModelItem" mnemonicParsing="false"
-                      text="Create sample GridInputModel"/>
+    <SeparatorMenuItem/>
 
-            <SeparatorMenuItem/>
+    <Menu mnemonicParsing="false" text="Load GridInputModel">
+        <MenuItem fx:id="fromCsvItem" mnemonicParsing="false" text="from CSV ..."/>
+    </Menu>
 
-            <Menu mnemonicParsing="false" text="Load GridInputModel">
-                <MenuItem fx:id="fromCsvItem" mnemonicParsing="false" text="from CSV ..."/>
-            </Menu>
+    <MenuItem fx:id="loadEfRuhrGridModelItem" disable="true" mnemonicParsing="false"
+              text="Load ef.Ruhr GridModel"/>
 
-            <MenuItem fx:id="loadEfRuhrGridModelItem" disable="true" mnemonicParsing="false"
-                      text="Load ef.Ruhr GridModel"/>
+    <SeparatorMenuItem/>
 
-            <SeparatorMenuItem/>
+    <Menu fx:id="saveGrid" disable="true" mnemonicParsing="false" text="Save GridInputModel">
+        <MenuItem fx:id="saveGridCsvItem" mnemonicParsing="false" text="to CSV ..."/>
+    </Menu>
 
-            <Menu fx:id="saveGrid" disable="true" mnemonicParsing="false" text="Save GridInputModel">
-                <MenuItem fx:id="saveGridCsvItem" mnemonicParsing="false" text="to CSV ..."/>
-            </Menu>
+    <MenuItem fx:id="saveEfRuhrGridModelItem" disable="true" mnemonicParsing="false"
+              text="Save ef.Ruhr GridModel"/>
 
-            <MenuItem fx:id="saveEfRuhrGridModelItem" disable="true" mnemonicParsing="false"
-                      text="Save ef.Ruhr GridModel"/>
+    <SeparatorMenuItem/>
 
-            <SeparatorMenuItem/>
-
-            <MenuItem fx:id="exitItem" mnemonicParsing="false" text="Exit"/>
-        </Menu>
-<!--    </MenuBar>-->
-<!--</VBox>-->
+    <MenuItem fx:id="exitItem" mnemonicParsing="false" text="Exit"/>
+</Menu>
