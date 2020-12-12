@@ -11,12 +11,14 @@ import edu.ie3.datamodel.models.input.NodeInput
 import edu.ie3.datamodel.models.input.OperatorInput
 import edu.ie3.datamodel.models.input.connector.LineInput
 import edu.ie3.datamodel.models.input.connector.type.LineTypeInput
+import edu.ie3.datamodel.models.input.container.GridContainer
 import edu.ie3.datamodel.models.input.system.characteristic.OlmCharacteristicInput
 import edu.ie3.datamodel.models.voltagelevels.GermanVoltageLevelUtils
 import edu.ie3.datamodel.utils.GridAndGeoUtils
 import edu.ie3.netpad.io.controller.IoController
 import edu.ie3.netpad.io.event.ReadGridEvent
 import edu.ie3.netpad.util.SampleGridFactory
+import edu.ie3.test.common.grids.LengthAdaptionTestGrid
 import edu.ie3.util.geo.GeoUtils
 import edu.ie3.util.quantities.PowerSystemUnits
 import edu.ie3.util.quantities.QuantityUtil
@@ -31,14 +33,13 @@ import javax.measure.Quantity
 import javax.measure.quantity.Length
 import java.util.stream.Collectors
 
-class GridControllerTest extends Specification {
+class GridControllerTest extends Specification implements LengthAdaptionTestGrid {
 
 	@Shared
 	LineInput testLine
 
 	def setupSpec() {
 		/* Build the test line */
-
 		def nodeA = new NodeInput(
 				UUID.randomUUID(),
 				"nodeA",
@@ -273,5 +274,79 @@ class GridControllerTest extends Specification {
 		new LatLon(51.4843281, 7.4116482) | 225.0   | 236.5    || new LatLon(49.958281440399226, 5.076461664627842)
 		new LatLon(51.4843281, 7.4116482) | 270.0   | 236.5    || new LatLon(51.4348704962085, 4.0024894471970445)
 		new LatLon(51.4843281, 7.4116482) | 315.0   | 236.5    || new LatLon(52.9608245636982, 4.91747975168356)
+	}
+
+	def "A GridController is able to update nodes in a grid container"() {
+		given:
+		IoController.instance.notifyListener(new ReadGridEvent(testGrid))
+
+		def updatedNodeA = nodeA.copy().subnet(3).build()
+		def nodeMapping = new HashMap<UUID, NodeInput>()
+		nodeMapping.put(updatedNodeA.getUuid(), updatedNodeA)
+
+		def expectedNodes = new HashMap<UUID, NodeInput>()
+		expectedNodes.put(nodeA.getUuid(), updatedNodeA)
+		expectedNodes.put(nodeB.getUuid(), nodeB)
+		expectedNodes.put(nodeC.getUuid(), nodeC)
+		expectedNodes.put(nodeD.getUuid(), nodeD)
+		expectedNodes.put(nodeE.getUuid(), nodeE)
+		expectedNodes.put(nodeF.getUuid(), nodeF)
+		expectedNodes.put(nodeG.getUuid(), nodeG)
+
+		when:
+		def actual = GridController.instance.update(testGrid as GridContainer, nodeMapping, [] as Set<LineInput>)
+		def uuidToNode = actual
+				.getRawGrid()
+				.getNodes()
+				.stream()
+				.collect(
+				Collectors.toMap(
+				{ node -> ((NodeInput) node).getUuid() }, { node ->
+					((NodeInput) node)
+				}
+				)
+				)
+
+		then:
+		uuidToNode.size() == expectedNodes.size()
+		uuidToNode.forEach { uuid, node ->
+			assert expectedNodes.get(uuid) == node
+		}
+	}
+
+	def "A GridController is able to update lines in a grid container"() {
+		given:
+		def updatedLineBC = lineBC.copy().length(Quantities.getQuantity(3d, PowerSystemUnits.KILOMETRE)).build()
+		def updatedLineCD = lineCD.copy().length(Quantities.getQuantity(3d, PowerSystemUnits.KILOMETRE)).build()
+		def updatedLines = new HashSet<LineInput>()
+		updatedLines.add(updatedLineBC)
+		updatedLines.add(updatedLineCD)
+
+		def expectedLines = new HashMap<UUID, LineInput>()
+		expectedLines.put(lineBC.getUuid(), updatedLineBC)
+		expectedLines.put(lineCD.getUuid(), updatedLineCD)
+		expectedLines.put(lineCE.getUuid(), lineCE)
+		expectedLines.put(lineEF.getUuid(), lineEF)
+		expectedLines.put(lineEG.getUuid(), lineEG)
+
+		when:
+		def actual = GridController.instance.update(testGrid as GridContainer, [:] as Map<UUID, NodeInput>, updatedLines)
+		def uuidToLine = actual
+				.getRawGrid()
+				.getLines()
+				.stream()
+				.collect(
+				Collectors.toMap(
+				{ line -> ((LineInput) line).getUuid() }, { line ->
+					((LineInput) line)
+				}
+				)
+				)
+
+		then:
+		uuidToLine.size() == expectedLines.size()
+		uuidToLine.forEach { uuid, node ->
+			assert expectedLines.get(uuid) == node
+		}
 	}
 }

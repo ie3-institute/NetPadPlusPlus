@@ -563,6 +563,22 @@ public class GridController {
         rawGrid.getNodes().stream()
             .map(node -> nodeMapping.getOrDefault(node.getUuid(), node))
             .collect(Collectors.toSet());
+    /* If there is an updated line with the same uuid, take this one, otherwise take the existing one. */
+    Set<LineInput> lines =
+        rawGrid.getLines().stream()
+            .map(
+                line ->
+                    updatedLines.stream()
+                        .filter(updatedLine -> updatedLine.getUuid().equals(line.getUuid()))
+                        .findFirst()
+                        .orElse(line))
+            .map(
+                line ->
+                    line.copy()
+                        .nodeA(nodeMapping.getOrDefault(line.getNodeA().getUuid(), line.getNodeA()))
+                        .nodeB(nodeMapping.getOrDefault(line.getNodeB().getUuid(), line.getNodeB()))
+                        .build())
+            .collect(Collectors.toSet());
     Set<Transformer2WInput> transformers2w =
         rawGrid.getTransformer2Ws().stream()
             .map(
@@ -620,8 +636,7 @@ public class GridController {
                         .build())
             .collect(Collectors.toSet());
     RawGridElements updatedRawGridElements =
-        new RawGridElements(
-            nodes, updatedLines, transformers2w, transformers3w, switches, measurements);
+        new RawGridElements(nodes, lines, transformers2w, transformers3w, switches, measurements);
 
     /* Update system participants */
     List<SystemParticipantInput> updatedElements =

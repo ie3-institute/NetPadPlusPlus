@@ -1,5 +1,5 @@
 uuid,geo_position,id,operates_from,operates_until,operator,slack,subnet,v_rated,v_target,volt_lvl
-36514e92-e6d9-4a7e-85b1-175ec6e27216,"{""type"":""Point"",""coordinates"":[7.411931,51.493045],""crs"":{""type"":""name"",""properties"":{""name"":""EPSG:4326""}}}",node_a,"","","",true,1,10.0,1.0,MV
+36514e92-e6d9-4a7e-85b1-175ec6e27216,"{""type"":""Point"",""coordinates"":[7.411931,51.493045],""crs"":{""type"":""name"",""properties"":{""name"":""EPSG:4326""}}}",node_a,"","","",true,1,20.0,1.0,MV
 78beb137-45e2-43e3-8baa-1c25f0c91616,"{""type"":""Point"",""coordinates"":[7.411931,51.493045],""crs"":{""type"":""name"",""properties"":{""name"":""EPSG:4326""}}}",node_b,"","","",false,2,0.4,1.0,LV
 83586a39-8a55-4b10-a034-7ccfe6a451cb,"{""type"":""Point"",""coordinates"":[7.411728,51.493918],""crs"":{""type"":""name"",""properties"":{""name"":""EPSG:4326""}}}",node_c,"","","",false,2,0.4,1.0,LV
 a0746324-3c74-4a03-9e45-41ae2880ad8d,"{""type"":""Point"",""coordinates"":[7.411497,51.494553],""crs"":{""type"":""name"",""properties"":{""name"":""EPSG:4326""}}}",node_d,"","","",false,2,0.4,1.0,LV
