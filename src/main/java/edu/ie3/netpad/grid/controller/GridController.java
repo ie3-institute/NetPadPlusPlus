@@ -39,19 +39,18 @@ import edu.ie3.netpad.tool.event.LayoutGridRequestEvent;
 import edu.ie3.netpad.tool.event.LayoutGridResponse;
 import edu.ie3.netpad.tool.event.ToolEvent;
 import edu.ie3.util.geo.GeoUtils;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
+import javax.measure.quantity.Length;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tech.units.indriya.ComparableQuantity;
-
-import javax.measure.quantity.Length;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * //ToDo: Class Description

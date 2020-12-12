@@ -5,6 +5,8 @@
 */
 package edu.ie3.netpad.util;
 
+import static edu.ie3.util.quantities.PowerSystemUnits.*;
+
 import edu.ie3.datamodel.exceptions.ParsingException;
 import edu.ie3.datamodel.models.BdewLoadProfile;
 import edu.ie3.datamodel.models.OperationTime;
@@ -34,21 +36,18 @@ import edu.ie3.util.quantities.PowerSystemUnits;
 import edu.ie3.util.quantities.interfaces.Currency;
 import edu.ie3.util.quantities.interfaces.DimensionlessRate;
 import edu.ie3.util.quantities.interfaces.EnergyPrice;
-import org.locationtech.jts.geom.Point;
-import org.locationtech.jts.io.ParseException;
-import org.locationtech.jts.io.geojson.GeoJsonReader;
-import tech.units.indriya.ComparableQuantity;
-import tech.units.indriya.quantity.Quantities;
-
-import javax.measure.MetricPrefix;
-import javax.measure.quantity.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
-import static edu.ie3.util.quantities.PowerSystemUnits.*;
+import javax.measure.MetricPrefix;
+import javax.measure.quantity.*;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.io.ParseException;
+import org.locationtech.jts.io.geojson.GeoJsonReader;
+import tech.units.indriya.ComparableQuantity;
+import tech.units.indriya.quantity.Quantities;
 
 /**
  * //ToDo: Class Description
