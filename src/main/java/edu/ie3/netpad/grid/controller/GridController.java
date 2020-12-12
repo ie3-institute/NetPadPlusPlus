@@ -106,7 +106,6 @@ public class GridController {
   }
 
   private void handleReadGridEvent(ReadGridEvent newValue) {
-
     // clear subGrids
     subGrids.clear();
 
@@ -502,13 +501,17 @@ public class GridController {
       throws GridManipulationException {
     Set<LineInput> descendantLines =
         topologyGraph.edgesOf(startNode).stream()
-            .filter(connector -> LineInput.class.isAssignableFrom(connector.getClass()))
+            .filter(
+                connector ->
+                    LineInput.class.isAssignableFrom(connector.getClass())
+                        && updatedLines.stream()
+                            .noneMatch(ul -> ul.getUuid().equals(connector.getUuid())))
             .map(connector -> (LineInput) connector)
             .collect(Collectors.toSet());
     for (LineInput line : descendantLines) {
       /* Determine the bearing (we are still operating on the "old" lines and nodes) */
       Coordinate coordinateA = startNode.getGeoPosition().getCoordinate();
-      NodeInput nodeB = line.getNodeA() == startNode ? line.getNodeB() : line.getNodeA();
+      NodeInput nodeB = line.getNodeA().equals(startNode) ? line.getNodeB() : line.getNodeA();
       Coordinate coordinateB = nodeB.getGeoPosition().getCoordinate();
       ComparableQuantity<Angle> bearing =
           getBearing(
@@ -538,11 +541,8 @@ public class GridController {
               .build();
       updatedLines.add(updatedLine);
 
-      /* Go deeper for each node */
-      Set<NodeInput> descendantNodes = topologyGraph.getDescendants(startNode);
-      for (NodeInput node : descendantNodes) {
-        traverseAndUpdateLines(node, topologyGraph, nodeMapping, updatedLines);
-      }
+      /* Go deeper at the node, that we last have traveled */
+      traverseAndUpdateLines(nodeB, topologyGraph, nodeMapping, updatedLines);
     }
   }
 
