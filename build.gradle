@@ -11,7 +11,7 @@ plugins {
 	id 'org.openjfx.javafxplugin' version '0.0.9' // java 11 javafx plugin for gradle
 	id 'jacoco' // java code coverage plugin
 	id "org.sonarqube" version "3.0" // sonarqube
-	id "com.github.johnrengelman.shadow" version "6.1.0" // fat jar
+	id "com.github.johnrengelman.shadow" version "7.0.0" // fat jar
 }
 
 ext {
