@@ -7,10 +7,9 @@ package edu.ie3.netpad.io.controller;
 
 import edu.ie3.datamodel.exceptions.FileException;
 import edu.ie3.datamodel.exceptions.ParsingException;
-import edu.ie3.datamodel.io.TarballUtils;
 import edu.ie3.datamodel.io.csv.DefaultDirectoryHierarchy;
-import edu.ie3.datamodel.io.csv.FileNamingStrategy;
-import edu.ie3.datamodel.io.csv.HierarchicFileNamingStrategy;
+import edu.ie3.datamodel.io.naming.EntityPersistenceNamingStrategy;
+import edu.ie3.datamodel.io.naming.HierarchicFileNamingStrategy;
 import edu.ie3.datamodel.io.processor.ProcessorProvider;
 import edu.ie3.datamodel.io.sink.CsvFileSink;
 import edu.ie3.datamodel.io.source.csv.*;
@@ -30,6 +29,7 @@ import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -101,8 +101,8 @@ public class IoController {
     /* Extract the content of the tarball */
     Path folderPath;
     try {
-      folderPath = TarballUtils.extract(absoluteArchivePath.toPath(), tmpDirectory, false);
-    } catch (FileException e) {
+      folderPath = FileIOUtils.extractDir(absoluteArchivePath.toPath(), tmpDirectory).get();
+    } catch (ExecutionException | InterruptedException e) {
       logger.error("Cannot read from archive, as extraction failed.", e);
       return false;
     }
@@ -134,12 +134,12 @@ public class IoController {
       IoDialogs.CsvIoData.DirectoryHierarchy hierarchy) {
     /* Collect the information needed to obtain the grid structure */
     String gridName = extractGridName(absoluteFilePath);
-    FileNamingStrategy fileNamingStrategy;
+    EntityPersistenceNamingStrategy fileNamingStrategy;
     String baseDirectory;
     switch (hierarchy) {
       case FLAT:
         baseDirectory = absoluteFilePath.toString();
-        fileNamingStrategy = new FileNamingStrategy();
+        fileNamingStrategy = new EntityPersistenceNamingStrategy();
         break;
       case HIERARCHIC:
         /* Remove the last part from the path and possibly the last File separator */
@@ -279,9 +279,9 @@ public class IoController {
               ZonedDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddhhmmssSSS")));
       saveGridToCsv(targetDirectory, gridContainer, hierarchy, csvSeparator);
       Path targetFile = Paths.get(FilenameUtils.concat(targetPath, gridName + ".tar.gz"));
-      TarballUtils.compress(Paths.get(targetDirectory), targetFile);
+      FileIOUtils.compressDir(Paths.get(targetDirectory), targetFile).get();
       FileIOUtils.deleteRecursively(tmpDirectory);
-    } catch (IOException | FileException e) {
+    } catch (IOException | ExecutionException | InterruptedException e) {
       throw new IoControllerException("Cannot save '" + gridName + "'.", e);
     }
   }
@@ -300,9 +300,9 @@ public class IoController {
       IoDialogs.CsvIoData.DirectoryHierarchy hierarchy,
       String csvSeparator) {
     /* Persist the raw csv data */
-    FileNamingStrategy fileNamingStrategy =
+    EntityPersistenceNamingStrategy fileNamingStrategy =
         hierarchy == IoDialogs.CsvIoData.DirectoryHierarchy.FLAT
-            ? new FileNamingStrategy()
+            ? new EntityPersistenceNamingStrategy()
             : new HierarchicFileNamingStrategy(
                 new DefaultDirectoryHierarchy(targetDirectory, gridContainer.getGridName()));
     CsvFileSink csvFileSink =

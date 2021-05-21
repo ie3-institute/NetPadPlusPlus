@@ -56,7 +56,7 @@ dependencies {
 		exclude group: 'com.github.ie3-institute'
 	}
 
-	compile ('com.github.ie3-institute:PowerSystemUtils:1.4-SNAPSHOT') {
+	compile ('com.github.ie3-institute:PowerSystemUtils:1.5.2') {
 		/* Exclude nested logging and ie³ related dependencies */
 		exclude group: 'org.slf4j'
 		exclude group: 'com.github.ie3-institute'
