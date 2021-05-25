@@ -88,16 +88,16 @@ dependencies {
 	// logging
 	compile "org.slf4j:slf4j-api:${slf4jVersion}" // slf4j wrapper
 	compile 'com.lmax:disruptor:+' //async logging
-	compile 'org.apache.logging.log4j:log4j-api:+' // log4j
-	compile 'org.apache.logging.log4j:log4j-core:+' // log4j
-	compile 'org.apache.logging.log4j:log4j-slf4j-impl:+' // log4j -> slf4j
+	compile 'org.apache.logging.log4j:log4j-api:2.14.1' // log4j
+	compile 'org.apache.logging.log4j:log4j-core:2.14.1' // log4j
+	compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.14.1' // log4j -> slf4j
 
 
 	// testing
-	testCompile 'junit:junit:+'
+	testCompile 'junit:junit:4.13.2'
 	testCompile 'org.spockframework:spock-core:2.0-M1-groovy-2.5'
-	testCompile 'cglib:cglib-nodep:+' //enables mocking of classes (in addition to interfaces)
-	compile 'org.mockito:mockito-core:+' //mocking framework
+	testCompile 'cglib:cglib-nodep:3.3.0' //enables mocking of classes (in addition to interfaces)
+	compile 'org.mockito:mockito-core:3.10.0' //mocking framework
 
 	// pbf parser //
 	compile 'com.github.johanneshiry:OSMonaut:1.1'
