@@ -43,14 +43,14 @@ apply from: scriptsLocation + 'jacoco.gradle'
 apply from: scriptsLocation + 'mavenCentralPublish.gradle'
 
 repositories {
-	jcenter() //searches in bintray's repository 'jCenter', which contains Maven Central
+	mavenCentral()
 	maven { url "https://jitpack.io" } // allows for github repos as dependencies
 	maven { url 'https://oss.sonatype.org/service/local/repositories/snapshots/content' } // snapshot artifacts
 }
 
 dependencies {
 	// ie³ github repository
-	compile ('com.github.ie3-institute:PowerSystemDataModel:2.0-SNAPSHOT') {
+	compile ('com.github.ie3-institute:PowerSystemDataModel:2.0.0') {
 		/* Exclude nested logging and ie³ related dependencies */
 		exclude group: 'org.slf4j'
 		exclude group: 'com.github.ie3-institute'
