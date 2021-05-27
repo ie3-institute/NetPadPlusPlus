@@ -50,7 +50,7 @@ repositories {
 
 dependencies {
 	// ie³ github repository
-	compile ('com.github.ie3-institute:PowerSystemDataModel:2.0.1') {
+	compile ('com.github.ie3-institute:PowerSystemDataModel:2.0.0') {
 		/* Exclude nested logging and ie³ related dependencies */
 		exclude group: 'org.slf4j'
 		exclude group: 'com.github.ie3-institute'
