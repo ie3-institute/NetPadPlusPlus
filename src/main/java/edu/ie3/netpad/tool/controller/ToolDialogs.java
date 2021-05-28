@@ -5,19 +5,18 @@
 */
 package edu.ie3.netpad.tool.controller;
 
-import static edu.ie3.netpad.tool.LineLengthResolutionMode.ELECTRICAL;
-import static edu.ie3.netpad.tool.LineLengthResolutionMode.GEOGRAPHICAL;
+import static edu.ie3.netpad.tool.grid.LineLengthResolutionMode.ELECTRICAL;
+import static edu.ie3.netpad.tool.grid.LineLengthResolutionMode.GEOGRAPHICAL;
 import static javafx.scene.control.CheckBoxTreeItem.checkBoxSelectionChangedEvent;
 
 import edu.ie3.datamodel.models.input.container.SubGridContainer;
 import edu.ie3.datamodel.models.voltagelevels.VoltageLevel;
 import edu.ie3.netpad.exception.NetPadPlusPlusException;
 import edu.ie3.netpad.grid.controller.GridController;
-import edu.ie3.netpad.tool.LineLengthResolutionMode;
+import edu.ie3.netpad.tool.grid.LineLengthResolutionMode;
 import java.util.*;
 import java.util.stream.Collectors;
 import javafx.beans.binding.Bindings;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
@@ -153,20 +152,19 @@ public class ToolDialogs {
               new CheckBoxTreeItem<>(Integer.toString(subGrid.getSubnet()));
           checkBoxTreeItem.addEventHandler(
               checkBoxSelectionChangedEvent(),
-              (EventHandler<CheckBoxTreeItem.TreeModificationEvent<String>>)
-                  event -> {
-                    CheckBoxTreeItem<String> chk = event.getTreeItem();
-                    try {
-                      int subnetNumber = Integer.parseInt(chk.getValue());
-                      if (chk.isSelected()) {
-                        selectedSubnets.add(subnetNumber);
-                      } else {
-                        selectedSubnets.remove(subnetNumber);
-                      }
-                    } catch (NumberFormatException nfe) {
-                      logger.error("Unable to parse '{}' to integer.", chk.getValue());
-                    }
-                  });
+              event -> {
+                CheckBoxTreeItem<Object> chk = event.getTreeItem();
+                try {
+                  int subnetNumber = Integer.parseInt((String) chk.getValue());
+                  if (chk.isSelected()) {
+                    selectedSubnets.add(subnetNumber);
+                  } else {
+                    selectedSubnets.remove(subnetNumber);
+                  }
+                } catch (NumberFormatException nfe) {
+                  logger.error("Unable to parse '{}' to integer.", chk.getValue());
+                }
+              });
           checkBoxTreeItem.setSelected(true);
 
           voltageLvlChkBox.getChildren().add(checkBoxTreeItem);
