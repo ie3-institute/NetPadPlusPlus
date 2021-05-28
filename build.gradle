@@ -50,57 +50,57 @@ repositories {
 
 dependencies {
 	// ie³ github repository
-	compile ('com.github.ie3-institute:PowerSystemDataModel:2.0.0') {
+	implementation ('com.github.ie3-institute:PowerSystemDataModel:2.0.0') {
 		/* Exclude nested logging and ie³ related dependencies */
 		exclude group: 'org.slf4j'
 		exclude group: 'com.github.ie3-institute'
 	}
 
-	compile ('com.github.ie3-institute:PowerSystemUtils:1.5.3') {
+	implementation ('com.github.ie3-institute:PowerSystemUtils:1.5.3') {
 		/* Exclude nested logging and ie³ related dependencies */
 		exclude group: 'org.slf4j'
 		exclude group: 'com.github.ie3-institute'
 	}
 
 	// gluon hq
-	compile 'com.gluonhq:maps:2.0.0-ea+3'
+	implementation 'com.gluonhq:maps:2.0.0-ea+3'
 	implementation 'com.gluonhq.attach:util:4.0.7'
 	implementation 'com.gluonhq.attach:storage:4.0.7:desktop'
 
 	// JGraphT
-	compile 'org.jgrapht:jgrapht-core:1.3.1'
-	compile 'org.jgrapht:jgrapht-ext:1.3.1'
+	implementation 'org.jgrapht:jgrapht-core:1.3.1'
+	implementation 'org.jgrapht:jgrapht-ext:1.3.1'
 
 
 	// javafx
-	compile "org.openjfx:javafx-fxml:$javaFxVersion"
-	compile "org.openjfx:javafx-swing:$javaFxVersion"
-	compile "org.openjfx:javafx-graphics:$javaFxVersion"
-	compile "org.openjfx:javafx-web:$javaFxVersion"
+	implementation "org.openjfx:javafx-fxml:$javaFxVersion"
+	implementation "org.openjfx:javafx-swing:$javaFxVersion"
+	implementation "org.openjfx:javafx-graphics:$javaFxVersion"
+	implementation "org.openjfx:javafx-web:$javaFxVersion"
 	implementation 'org.controlsfx:controlsfx:11.0.1'
 
 	// Apache POI
-	compile 'org.apache.poi:poi-ooxml:4.1.0'
+	implementation 'org.apache.poi:poi-ooxml:4.1.0'
 
 	// rx java
-	compile 'io.reactivex:rxjava:1.3.8'
+	implementation 'io.reactivex:rxjava:1.3.8'
 
 	// logging
-	compile "org.slf4j:slf4j-api:${slf4jVersion}" // slf4j wrapper
-	compile 'com.lmax:disruptor:+' //async logging
-	compile 'org.apache.logging.log4j:log4j-api:2.14.1' // log4j
-	compile 'org.apache.logging.log4j:log4j-core:2.14.1' // log4j
-	compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.14.1' // log4j -> slf4j
+	implementation "org.slf4j:slf4j-api:${slf4jVersion}" // slf4j wrapper
+	implementation 'com.lmax:disruptor:+' //async logging
+	implementation 'org.apache.logging.log4j:log4j-api:2.14.1' // log4j
+	implementation 'org.apache.logging.log4j:log4j-core:2.14.1' // log4j
+	implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.14.1' // log4j -> slf4j
 
 
 	// testing
-	testCompile 'junit:junit:4.13.2'
-	testCompile 'org.spockframework:spock-core:2.0-M1-groovy-2.5'
-	testCompile 'cglib:cglib-nodep:3.3.0' //enables mocking of classes (in addition to interfaces)
-	compile 'org.mockito:mockito-core:3.10.0' //mocking framework
+	testImplementation 'junit:junit:4.13.2'
+	testImplementation 'org.spockframework:spock-core:2.0-M1-groovy-2.5'
+	testImplementation 'cglib:cglib-nodep:3.3.0' //enables mocking of classes (in addition to interfaces)
+	implementation 'org.mockito:mockito-core:3.10.0' //mocking framework
 
 	// pbf parser //
-	compile 'com.github.johanneshiry:OSMonaut:1.1'
+	implementation 'com.github.johanneshiry:OSMonaut:1.1'
 }
 
 wrapper {
