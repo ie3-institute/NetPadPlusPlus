@@ -12,7 +12,9 @@ import edu.ie3.datamodel.models.input.InputEntity;
 import edu.ie3.datamodel.models.input.NodeInput;
 import edu.ie3.datamodel.models.input.connector.LineInput;
 import edu.ie3.datamodel.models.input.connector.Transformer2WInput;
-import edu.ie3.datamodel.models.input.container.*;
+import edu.ie3.datamodel.models.input.container.GridContainer;
+import edu.ie3.datamodel.models.input.container.JointGridContainer;
+import edu.ie3.datamodel.models.input.container.SubGridContainer;
 import edu.ie3.datamodel.models.input.system.LoadInput;
 import edu.ie3.datamodel.models.input.system.PvInput;
 import edu.ie3.datamodel.models.input.system.StorageInput;
@@ -27,10 +29,13 @@ import edu.ie3.netpad.io.event.IOEvent;
 import edu.ie3.netpad.io.event.ReadGridEvent;
 import edu.ie3.netpad.io.event.SaveGridEvent;
 import edu.ie3.netpad.map.event.MapEvent;
-import edu.ie3.netpad.tool.ToolController;
+import edu.ie3.netpad.tool.controller.ToolController;
+import edu.ie3.netpad.tool.event.FixLineLengthRequestEvent;
 import edu.ie3.netpad.tool.event.LayoutGridRequestEvent;
 import edu.ie3.netpad.tool.event.LayoutGridResponse;
 import edu.ie3.netpad.tool.event.ToolEvent;
+import edu.ie3.netpad.tool.grid.LineLengthFixer;
+import edu.ie3.netpad.tool.grid.LineLengthResolutionMode;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -50,11 +55,19 @@ public class GridController {
 
   private static final Logger log = LoggerFactory.getLogger(GridController.class);
 
+  private static final class InstanceHolder {
+    static final GridController INSTANCE = new GridController();
+  }
+
+  public static GridController getInstance() {
+    return GridController.InstanceHolder.INSTANCE;
+  }
+
   private final Map<UUID, GridModel> subGrids = new LinkedHashMap<>();
 
   private final ObjectProperty<GridEvent> gridUpdateEventProperty = new SimpleObjectProperty<>();
 
-  public GridController() {
+  private GridController() {
 
     // register for updates from iOController
     IoController.getInstance().registerGridControllerListener(this.ioEventListener());
@@ -66,6 +79,14 @@ public class GridController {
     EditGridContextController.getInstance()
         .registerGridControllerListener(
             (observable, oldValue, gridContextEvent) -> handleGridModifications(gridContextEvent));
+  }
+
+  public boolean isGridLoaded() {
+    return subGrids.isEmpty();
+  }
+
+  public Map<UUID, GridModel> getSubGrids() {
+    return subGrids;
   }
 
   private void handleReadGridEvent(ReadGridEvent newValue) {
@@ -189,6 +210,12 @@ public class GridController {
       } else if (newValue instanceof LayoutGridResponse) {
         handleReadGridEvent(new ReadGridEvent(((LayoutGridResponse) newValue).getGrid()));
         log.debug("Received Tool response event");
+      } else if (newValue instanceof FixLineLengthRequestEvent) {
+        FixLineLengthRequestEvent event = (FixLineLengthRequestEvent) newValue;
+        LineLengthResolutionMode resolutionMode = event.getResolutionMode();
+        Set<Integer> selectedSubnets = event.getSelectedSubnets();
+        LineLengthFixer.execute(resolutionMode, selectedSubnets, subGrids)
+            .ifPresent(this::handleReadGridEvent);
       } else {
         throw new RuntimeException("Invalid GridContainer provided!");
       }
