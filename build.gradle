@@ -5,13 +5,13 @@ plugins {
 	id 'application'
 	id 'signing'
 	id 'pmd' //code check, working on source code
-	id "com.github.spotbugs" version "4.6.0" //code check, working on byte code
-	id "com.diffplug.spotless" version "5.7.0" //code format
-	id 'com.github.onslip.gradle-one-jar' version '1.0.5' // pack a self contained jar
+	id "com.github.spotbugs" version "4.7.1" //code check, working on byte code
+	id "com.diffplug.spotless" version "5.12.5" //code format
+	id 'com.github.onslip.gradle-one-jar' version '1.0.6' // pack a self contained jar
 	id 'org.openjfx.javafxplugin' version '0.0.9' // java 11 javafx plugin for gradle
 	id 'jacoco' // java code coverage plugin
 	id "org.sonarqube" version "3.0" // sonarqube
-	id "com.github.johnrengelman.shadow" version "6.1.0" // fat jar
+	id "com.github.johnrengelman.shadow" version "7.0.0" // fat jar
 }
 
 ext {
@@ -19,7 +19,7 @@ ext {
 	javaVersion = JavaVersion.VERSION_11
 
 	javaFxVersion = '15-ea+1'
-	slf4jVersion = '1.7.26'
+	slf4jVersion = '1.7.30'
 
 	scriptsLocation = 'gradle' + File.separator + 'scripts' + File.separator //location of script plugins
 }
@@ -43,64 +43,64 @@ apply from: scriptsLocation + 'jacoco.gradle'
 apply from: scriptsLocation + 'mavenCentralPublish.gradle'
 
 repositories {
-	jcenter() //searches in bintray's repository 'jCenter', which contains Maven Central
+	mavenCentral()
 	maven { url "https://jitpack.io" } // allows for github repos as dependencies
 	maven { url 'https://oss.sonatype.org/service/local/repositories/snapshots/content' } // snapshot artifacts
 }
 
 dependencies {
 	// ie³ github repository
-	compile ('com.github.ie3-institute:PowerSystemDataModel:2.0-SNAPSHOT') {
+	implementation ('com.github.ie3-institute:PowerSystemDataModel:2.0.0') {
 		/* Exclude nested logging and ie³ related dependencies */
 		exclude group: 'org.slf4j'
 		exclude group: 'com.github.ie3-institute'
 	}
 
-	compile ('com.github.ie3-institute:PowerSystemUtils:1.5-SNAPSHOT') {
+	implementation ('com.github.ie3-institute:PowerSystemUtils:1.5.3') {
 		/* Exclude nested logging and ie³ related dependencies */
 		exclude group: 'org.slf4j'
 		exclude group: 'com.github.ie3-institute'
 	}
 
 	// gluon hq
-	compile 'com.gluonhq:maps:2.0.0-ea+3'
-	implementation 'com.gluonhq.attach:util:4.0.7'
+	implementation 'com.gluonhq:maps:2.0.0-ea+3'
+	implementation 'com.gluonhq.attach:util:4.0.11'
 	implementation 'com.gluonhq.attach:storage:4.0.7:desktop'
 
 	// JGraphT
-	compile 'org.jgrapht:jgrapht-core:1.3.1'
-	compile 'org.jgrapht:jgrapht-ext:1.3.1'
+	implementation 'org.jgrapht:jgrapht-core:1.3.1'
+	implementation 'org.jgrapht:jgrapht-ext:1.3.1'
 
 
 	// javafx
-	compile "org.openjfx:javafx-fxml:$javaFxVersion"
-	compile "org.openjfx:javafx-swing:$javaFxVersion"
-	compile "org.openjfx:javafx-graphics:$javaFxVersion"
-	compile "org.openjfx:javafx-web:$javaFxVersion"
-	implementation 'org.controlsfx:controlsfx:11.0.1'
+	implementation "org.openjfx:javafx-fxml:$javaFxVersion"
+	implementation "org.openjfx:javafx-swing:$javaFxVersion"
+	implementation "org.openjfx:javafx-graphics:$javaFxVersion"
+	implementation "org.openjfx:javafx-web:$javaFxVersion"
+	implementation 'org.controlsfx:controlsfx:11.1.0'
 
 	// Apache POI
-	compile 'org.apache.poi:poi-ooxml:4.1.0'
+	implementation 'org.apache.poi:poi-ooxml:5.0.0'
 
 	// rx java
-	compile 'io.reactivex:rxjava:1.3.8'
+	implementation 'io.reactivex:rxjava:1.3.8'
 
 	// logging
-	compile "org.slf4j:slf4j-api:${slf4jVersion}" // slf4j wrapper
-	compile 'com.lmax:disruptor:+' //async logging
-	compile 'org.apache.logging.log4j:log4j-api:+' // log4j
-	compile 'org.apache.logging.log4j:log4j-core:+' // log4j
-	compile 'org.apache.logging.log4j:log4j-slf4j-impl:+' // log4j -> slf4j
+	implementation "org.slf4j:slf4j-api:${slf4jVersion}" // slf4j wrapper
+	implementation 'com.lmax:disruptor:+' //async logging
+	implementation 'org.apache.logging.log4j:log4j-api:2.14.1' // log4j
+	implementation 'org.apache.logging.log4j:log4j-core:2.14.1' // log4j
+	implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.14.1' // log4j -> slf4j
 
 
 	// testing
-	testCompile 'junit:junit:+'
-	testCompile 'org.spockframework:spock-core:2.0-M1-groovy-2.5'
-	testCompile 'cglib:cglib-nodep:+' //enables mocking of classes (in addition to interfaces)
-	compile 'org.mockito:mockito-core:+' //mocking framework
+	testImplementation 'junit:junit:4.13.2'
+	testImplementation 'org.spockframework:spock-core:2.1-groovy-3.0-SNAPSHOT'
+	testImplementation 'cglib:cglib-nodep:3.3.0' //enables mocking of classes (in addition to interfaces)
+	implementation 'org.mockito:mockito-core:3.10.0' //mocking framework
 
 	// pbf parser //
-	compile 'com.github.johanneshiry:OSMonaut:1.1'
+	implementation 'com.github.johanneshiry:OSMonaut:v1.1.1'
 }
 
 wrapper {
