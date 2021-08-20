@@ -1,3 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.transformers.AppendingTransformer
+
 plugins {
 	id 'java'
 	id 'groovy'
@@ -64,7 +66,7 @@ dependencies {
 
 	// gluon hq
 	implementation 'com.gluonhq:maps:2.0.0-ea+3'
-	implementation 'com.gluonhq.attach:util:4.0.11'
+	implementation 'com.gluonhq.attach:util:4.0.12'
 	implementation 'com.gluonhq.attach:storage:4.0.7:desktop'
 
 	// JGraphT
@@ -87,7 +89,7 @@ dependencies {
 
 	// logging
 	implementation "org.slf4j:slf4j-api:${slf4jVersion}" // slf4j wrapper
-	implementation 'com.lmax:disruptor:+' //async logging
+	implementation 'com.lmax:disruptor:3.4.4' //async logging
 	implementation 'org.apache.logging.log4j:log4j-api:2.14.1' // log4j
 	implementation 'org.apache.logging.log4j:log4j-core:2.14.1' // log4j
 	implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.14.1' // log4j -> slf4j
@@ -95,7 +97,7 @@ dependencies {
 
 	// testing
 	testImplementation 'junit:junit:4.13.2'
-	testImplementation 'org.spockframework:spock-core:2.1-groovy-3.0-SNAPSHOT'
+	testImplementation 'org.spockframework:spock-core:2.0-groovy-3.0'
 	testImplementation 'cglib:cglib-nodep:3.3.0' //enables mocking of classes (in addition to interfaces)
 	implementation 'org.mockito:mockito-core:3.11.2' //mocking framework
 
@@ -104,7 +106,7 @@ dependencies {
 }
 
 wrapper {
-	gradleVersion = '6.7'
+	gradleVersion = '7.2'
 }
 
 javafx {
@@ -131,7 +133,7 @@ task printVersion {
 
 shadowJar {
 
-	transform(com.github.jengelman.gradle.plugins.shadow.transformers.AppendingTransformer) {
+	transform(AppendingTransformer) {
 		resource = 'reference.conf'
 	}
 	zip64 = true
