@@ -99,7 +99,7 @@ dependencies {
 	testImplementation 'junit:junit:4.13.2'
 	testImplementation 'org.spockframework:spock-core:2.0-groovy-3.0'
 	testImplementation 'cglib:cglib-nodep:3.3.0' //enables mocking of classes (in addition to interfaces)
-	implementation 'org.mockito:mockito-core:3.12.4' //mocking framework
+	implementation 'org.mockito:mockito-core:4.0.0' //mocking framework
 
 	// pbf parser //
 	implementation 'com.github.johanneshiry:OSMonaut:v1.1.1'
