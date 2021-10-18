@@ -29,6 +29,7 @@ import edu.ie3.datamodel.models.input.system.characteristic.CosPhiFixed;
 import edu.ie3.datamodel.models.input.system.characteristic.OlmCharacteristicInput;
 import edu.ie3.datamodel.models.input.system.type.StorageTypeInput;
 import edu.ie3.datamodel.models.input.system.type.chargingpoint.ChargingPointTypeUtils;
+import edu.ie3.datamodel.models.input.system.type.evcslocation.EvcsLocationType;
 import edu.ie3.datamodel.models.voltagelevels.GermanVoltageLevelUtils;
 import edu.ie3.datamodel.utils.GridAndGeoUtils;
 import edu.ie3.util.TimeUtil;
@@ -156,7 +157,8 @@ public class SampleGridFactory {
             cosPhiFixed,
             ChargingPointTypeUtils.HouseholdSocket,
             2,
-            cosPhiRated);
+            cosPhiRated,
+            EvcsLocationType.HOME);
 
     final LoadInput loadInput1 =
         new LoadInput(
