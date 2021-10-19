@@ -5,8 +5,25 @@
  */
 package edu.ie3.netpad.grid.controller
 
-import edu.ie3.netpad.test.common.SampleData
+import edu.ie3.datamodel.models.OperationTime
+import edu.ie3.datamodel.models.StandardUnits
+import edu.ie3.datamodel.models.input.NodeInput
+import edu.ie3.datamodel.models.input.OperatorInput
+import edu.ie3.datamodel.models.input.connector.LineInput
+import edu.ie3.datamodel.models.input.connector.type.LineTypeInput
+import edu.ie3.datamodel.models.input.container.GridContainer
+import edu.ie3.datamodel.models.input.system.characteristic.OlmCharacteristicInput
+import edu.ie3.datamodel.models.voltagelevels.GermanVoltageLevelUtils
+import edu.ie3.datamodel.utils.GridAndGeoUtils
+import edu.ie3.netpad.io.controller.IoController
+import edu.ie3.netpad.io.event.ReadGridEvent
 import edu.ie3.netpad.util.SampleGridFactory
+import edu.ie3.test.common.grids.LengthAdaptionTestGrid
+import edu.ie3.util.quantities.PowerSystemUnits
+import edu.ie3.util.quantities.QuantityUtil
+import net.morbz.osmonaut.osm.LatLon
+import org.locationtech.jts.geom.Coordinate
+import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
 import tech.units.indriya.quantity.Quantities
@@ -14,6 +31,8 @@ import tech.units.indriya.quantity.Quantities
 import javax.measure.Quantity
 import javax.measure.quantity.Length
 import java.util.stream.Collectors
+
+import edu.ie3.util.geo.GeoUtils
 
 class GridControllerTest extends Specification implements LengthAdaptionTestGrid {
 
