@@ -33,13 +33,14 @@ import edu.ie3.netpad.io.event.IOEvent;
 import edu.ie3.netpad.io.event.ReadGridEvent;
 import edu.ie3.netpad.io.event.SaveGridEvent;
 import edu.ie3.netpad.map.event.MapEvent;
-import edu.ie3.netpad.tool.LineLengthResolutionMode;
 import edu.ie3.netpad.tool.controller.ToolController;
 import edu.ie3.netpad.tool.controller.ToolDialogs;
 import edu.ie3.netpad.tool.event.FixLineLengthRequestEvent;
 import edu.ie3.netpad.tool.event.LayoutGridRequestEvent;
 import edu.ie3.netpad.tool.event.LayoutGridResponse;
 import edu.ie3.netpad.tool.event.ToolEvent;
+import edu.ie3.netpad.tool.grid.LineLengthFixer;
+import edu.ie3.netpad.tool.grid.LineLengthResolutionMode;
 import edu.ie3.util.geo.GeoUtils;
 import edu.ie3.util.quantities.PowerSystemUnits;
 import java.util.*;
@@ -229,7 +230,8 @@ public class GridController {
         FixLineLengthRequestEvent event = (FixLineLengthRequestEvent) newValue;
         LineLengthResolutionMode resolutionMode = event.getResolutionMode();
         Set<Integer> selectedSubnets = event.getSelectedSubnets();
-        fixLineLength(resolutionMode, selectedSubnets);
+        LineLengthFixer.execute(resolutionMode, selectedSubnets, subGrids)
+            .ifPresent(this::handleReadGridEvent);
       } else {
         throw new RuntimeException("Invalid GridContainer provided!");
       }

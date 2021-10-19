@@ -234,13 +234,15 @@ trait LengthAdaptionTestGrid {
 		nodeD,
 		nodeE,
 		nodeF,
-		nodeG] as Set,
+		nodeG
+	] as Set,
 	[
 		lineBC,
 		lineCD,
 		lineCE,
 		lineEF,
-		lineEG] as Set,
+		lineEG
+	] as Set,
 	[transformer] as Set,
 	[] as Set,
 	[] as Set,

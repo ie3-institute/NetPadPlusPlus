@@ -5,7 +5,7 @@
 */
 package edu.ie3.netpad.tool.event;
 
-import edu.ie3.netpad.tool.LineLengthResolutionMode;
+import edu.ie3.netpad.tool.grid.LineLengthResolutionMode;
 import java.util.Objects;
 import java.util.Set;
 
