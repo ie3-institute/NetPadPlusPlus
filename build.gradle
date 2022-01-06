@@ -7,13 +7,13 @@ plugins {
 	id 'application'
 	id 'signing'
 	id 'pmd' //code check, working on source code
-	id "com.github.spotbugs" version "4.7.3" //code check, working on byte code
-	id "com.diffplug.spotless" version "5.14.3" //code format
+	id "com.github.spotbugs" version "5.0.3" //code check, working on byte code
+	id "com.diffplug.spotless" version "6.1.0" //code format
 	id 'com.github.onslip.gradle-one-jar' version '1.0.6' // pack a self contained jar
 	id 'org.openjfx.javafxplugin' version '0.0.10' // java 11 javafx plugin for gradle
 	id 'jacoco' // java code coverage plugin
 	id "org.sonarqube" version "3.3" // sonarqube
-	id "com.github.johnrengelman.shadow" version "7.1.0" // fat jar
+	id "com.github.johnrengelman.shadow" version "7.1.2" // fat jar
 }
 
 ext {
@@ -66,7 +66,7 @@ dependencies {
 
 	// gluon hq
 	implementation 'com.gluonhq:maps:2.0.0-ea+3'
-	implementation 'com.gluonhq.attach:util:4.0.12'
+	implementation 'com.gluonhq.attach:util:4.0.13'
 	implementation 'com.gluonhq.attach:storage:4.0.7:desktop'
 
 	// JGraphT
@@ -79,10 +79,10 @@ dependencies {
 	implementation "org.openjfx:javafx-swing:$javaFxVersion"
 	implementation "org.openjfx:javafx-graphics:$javaFxVersion"
 	implementation "org.openjfx:javafx-web:$javaFxVersion"
-	implementation 'org.controlsfx:controlsfx:11.1.0'
+	implementation 'org.controlsfx:controlsfx:11.1.1'
 
 	// Apache POI
-	implementation 'org.apache.poi:poi-ooxml:5.0.0'
+	implementation 'org.apache.poi:poi-ooxml:5.1.0'
 
 	// rx java
 	implementation 'io.reactivex:rxjava:1.3.8'
@@ -90,16 +90,16 @@ dependencies {
 	// logging
 	implementation "org.slf4j:slf4j-api:${slf4jVersion}" // slf4j wrapper
 	implementation 'com.lmax:disruptor:3.4.4' //async logging
-	implementation 'org.apache.logging.log4j:log4j-api:2.14.1' // log4j
-	implementation 'org.apache.logging.log4j:log4j-core:2.14.1' // log4j
-	implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.14.1' // log4j -> slf4j
+	implementation 'org.apache.logging.log4j:log4j-api:2.17.1' // log4j
+	implementation 'org.apache.logging.log4j:log4j-core:2.17.1' // log4j
+	implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.1' // log4j -> slf4j
 
 
 	// testing
 	testImplementation 'junit:junit:4.13.2'
 	testImplementation 'org.spockframework:spock-core:2.0-groovy-3.0'
 	testImplementation 'cglib:cglib-nodep:3.3.0' //enables mocking of classes (in addition to interfaces)
-	implementation 'org.mockito:mockito-core:3.12.4' //mocking framework
+	implementation 'org.mockito:mockito-core:4.2.0' //mocking framework
 
 	// pbf parser //
 	implementation 'com.github.johanneshiry:OSMonaut:v1.1.1'
