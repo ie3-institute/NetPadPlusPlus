@@ -20,7 +20,7 @@ projects = ['netpadplusplus']
 orgNames = ['ie3-institute']
 urls = ['git@github.com:' + orgNames.get(0)]
 
-def sonarqubeProjectKey = "edu.ie3:NetPad++"
+def sonarqubeProjectKey = "edu.ie3:NetPadPlusPlus"
 
 /// code coverage token id
 codeCovTokenId = "netpadplusplus-codecov-token"

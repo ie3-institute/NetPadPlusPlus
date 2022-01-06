@@ -2,7 +2,7 @@ sonarqube {
 	properties {
 		// general stuff
 		property 'sonar.projectName', 'NetPad++'
-		property 'sonar.projectKey', 'edu.ie3:NetPad++'
+		property 'sonar.projectKey', 'edu.ie3:NetPadPlusPlus'
 		property 'sonar.verbose', 'false' // WARNING: There is the potential for this setting to expose sensitive information such as passwords if they are stored as server-side environment variables.
 		property 'sonar.sourceEncoding', 'UTF-8' // encoding
 		property 'sonar.sources', [

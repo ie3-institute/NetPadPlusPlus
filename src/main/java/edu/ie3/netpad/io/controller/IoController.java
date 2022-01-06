@@ -7,9 +7,10 @@ package edu.ie3.netpad.io.controller;
 
 import edu.ie3.datamodel.exceptions.FileException;
 import edu.ie3.datamodel.exceptions.ParsingException;
-import edu.ie3.datamodel.io.csv.DefaultDirectoryHierarchy;
+import edu.ie3.datamodel.io.naming.DefaultDirectoryHierarchy;
 import edu.ie3.datamodel.io.naming.EntityPersistenceNamingStrategy;
-import edu.ie3.datamodel.io.naming.HierarchicFileNamingStrategy;
+import edu.ie3.datamodel.io.naming.FileNamingStrategy;
+import edu.ie3.datamodel.io.naming.FlatDirectoryHierarchy;
 import edu.ie3.datamodel.io.processor.ProcessorProvider;
 import edu.ie3.datamodel.io.sink.CsvFileSink;
 import edu.ie3.datamodel.io.source.csv.*;
@@ -134,12 +135,16 @@ public class IoController {
       IoDialogs.CsvIoData.DirectoryHierarchy hierarchy) {
     /* Collect the information needed to obtain the grid structure */
     String gridName = extractGridName(absoluteFilePath);
-    EntityPersistenceNamingStrategy fileNamingStrategy;
+    EntityPersistenceNamingStrategy entityPersistenceNamingStrategy =
+        new EntityPersistenceNamingStrategy();
     String baseDirectory;
+    FileNamingStrategy fileNamingStrategy;
     switch (hierarchy) {
       case FLAT:
+        FlatDirectoryHierarchy flatDirectoryHierarchy = new FlatDirectoryHierarchy();
         baseDirectory = absoluteFilePath.toString();
-        fileNamingStrategy = new EntityPersistenceNamingStrategy();
+        fileNamingStrategy =
+            new FileNamingStrategy(entityPersistenceNamingStrategy, flatDirectoryHierarchy);
         break;
       case HIERARCHIC:
         /* Remove the last part from the path and possibly the last File separator */
@@ -149,7 +154,8 @@ public class IoController {
           DefaultDirectoryHierarchy directoryHierarchy =
               new DefaultDirectoryHierarchy(baseDirectory, gridName);
           directoryHierarchy.validate();
-          fileNamingStrategy = new HierarchicFileNamingStrategy(directoryHierarchy);
+          fileNamingStrategy =
+              new FileNamingStrategy(entityPersistenceNamingStrategy, directoryHierarchy);
         } catch (FileException e) {
           logger.error(
               "Cannot read grid '{}', as the directory hierarchy does not comply with the specifications.",
@@ -300,11 +306,12 @@ public class IoController {
       IoDialogs.CsvIoData.DirectoryHierarchy hierarchy,
       String csvSeparator) {
     /* Persist the raw csv data */
-    EntityPersistenceNamingStrategy fileNamingStrategy =
-        hierarchy == IoDialogs.CsvIoData.DirectoryHierarchy.FLAT
-            ? new EntityPersistenceNamingStrategy()
-            : new HierarchicFileNamingStrategy(
-                new DefaultDirectoryHierarchy(targetDirectory, gridContainer.getGridName()));
+    FileNamingStrategy fileNamingStrategy =
+        new FileNamingStrategy(
+            new EntityPersistenceNamingStrategy(),
+            hierarchy == IoDialogs.CsvIoData.DirectoryHierarchy.FLAT
+                ? new FlatDirectoryHierarchy()
+                : new DefaultDirectoryHierarchy(targetDirectory, gridContainer.getGridName()));
     CsvFileSink csvFileSink =
         new CsvFileSink(
             targetDirectory, new ProcessorProvider(), fileNamingStrategy, false, csvSeparator);
