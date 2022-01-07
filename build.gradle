@@ -14,6 +14,7 @@ plugins {
 	id 'jacoco' // java code coverage plugin
 	id "org.sonarqube" version "3.3" // sonarqube
 	id "com.github.johnrengelman.shadow" version "7.1.2" // fat jar
+	id 'net.thauvin.erik.gradle.semver' version '1.0.4' // semantic versioning
 }
 
 ext {
