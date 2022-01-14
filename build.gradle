@@ -21,7 +21,7 @@ ext {
 	javaVersion = JavaVersion.VERSION_11
 
 	javaFxVersion = '15-ea+1'
-	slf4jVersion = '1.7.32'
+	slf4jVersion = '1.7.33'
 
 	scriptsLocation = 'gradle' + File.separator + 'scripts' + File.separator //location of script plugins
 }
