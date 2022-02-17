@@ -10,7 +10,7 @@ plugins {
 	id "com.github.spotbugs" version "5.0.6" //code check, working on byte code
 	id "com.diffplug.spotless" version "6.3.0" //code format
 	id 'com.github.onslip.gradle-one-jar' version '1.0.6' // pack a self contained jar
-	id 'org.openjfx.javafxplugin' version '0.0.11' // java 11 javafx plugin for gradle
+	id 'org.openjfx.javafxplugin' version '0.0.12' // java 11 javafx plugin for gradle
 	id 'jacoco' // java code coverage plugin
 	id "org.sonarqube" version "3.3" // sonarqube
 	id "com.github.johnrengelman.shadow" version "7.1.2" // fat jar
