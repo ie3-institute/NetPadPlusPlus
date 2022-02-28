@@ -21,7 +21,6 @@ ext {
 	javaVersion = JavaVersion.VERSION_11
 
 	javaFxVersion = '15-ea+1'
-	slf4jVersion = '1.7.36'
 
 	scriptsLocation = 'gradle' + File.separator + 'scripts' + File.separator //location of script plugins
 }
@@ -104,11 +103,12 @@ dependencies {
 	implementation 'io.reactivex:rxjava:1.3.8'
 
 	// logging
-	implementation "org.slf4j:slf4j-api:${slf4jVersion}" // slf4j wrapper
+	implementation 'org.slf4j:slf4j-api:1.7.36' // slf4j wrapper
 	implementation 'com.lmax:disruptor:3.4.4' //async logging
-	implementation 'org.apache.logging.log4j:log4j-api:2.17.1' // log4j
-	implementation 'org.apache.logging.log4j:log4j-core:2.17.2' // log4j
-	implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.1' // log4j -> slf4j
+	implementation platform('org.apache.logging.log4j:log4j-bom:2.17.2')
+	implementation 'org.apache.logging.log4j:log4j-api' // log4j
+	implementation 'org.apache.logging.log4j:log4j-core' // log4j
+	implementation 'org.apache.logging.log4j:log4j-slf4j-impl' // log4j -> slf4j
 
 
 	// testing
