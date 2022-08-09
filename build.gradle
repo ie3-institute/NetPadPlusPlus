@@ -81,7 +81,7 @@ dependencies {
 
 	// gluon hq
 	implementation 'com.gluonhq:maps:2.0.0-ea+3'
-	implementation 'com.gluonhq.attach:util:4.0.14'
+	implementation 'com.gluonhq.attach:util:4.0.15'
 	implementation 'com.gluonhq.attach:storage:4.0.7:desktop'
 
 	// JGraphT
