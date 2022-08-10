@@ -8,7 +8,7 @@ plugins {
 	id 'signing'
 	id 'pmd' //code check, working on source code
 	id "com.github.spotbugs" version "5.0.9" //code check, working on byte code
-	id "com.diffplug.spotless" version "6.9.0" //code format
+	id "com.diffplug.spotless" version "6.9.1" //code format
 	id 'com.github.onslip.gradle-one-jar' version '1.0.6' // pack a self contained jar
 	id 'org.openjfx.javafxplugin' version '0.0.13' // java 11 javafx plugin for gradle
 	id 'jacoco' // java code coverage plugin
