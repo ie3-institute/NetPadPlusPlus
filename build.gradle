@@ -20,7 +20,6 @@ ext {
 	//version (changing these should be considered thoroughly!)
 	javaVersion = JavaVersion.VERSION_11
 
-	jtsVersion = '1.19.0'
 	javaFxVersion = '15-ea+1'
 
 	scriptsLocation = 'gradle' + File.separator + 'scripts' + File.separator //location of script plugins
@@ -74,10 +73,10 @@ dependencies {
 	implementation 'tech.units:indriya:2.1.3'
 
 	// JTS
-	implementation ("org.locationtech.jts:jts-core:${jtsVersion}"){
+	implementation ('org.locationtech.jts:jts-core:1.18.2'){
 		exclude group: 'junit', module: 'junit'
 	}
-	implementation "org.locationtech.jts.io:jts-io-common:${jtsVersion}"
+	implementation 'org.locationtech.jts.io:jts-io-common:1.18.2'
 
 	// gluon hq
 	implementation 'com.gluonhq:maps:2.0.0-ea+3'
