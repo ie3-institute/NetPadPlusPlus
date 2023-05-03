@@ -85,7 +85,7 @@ dependencies {
 	implementation 'com.gluonhq.attach:storage:4.0.7:desktop'
 
 	// JGraphT
-	implementation 'org.jgrapht:jgrapht-core:1.5.1'
+	implementation 'org.jgrapht:jgrapht-core:1.5.2'
 	implementation 'org.jgrapht:jgrapht-ext:1.5.1'
 
 
