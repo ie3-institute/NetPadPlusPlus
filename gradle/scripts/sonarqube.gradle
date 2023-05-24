@@ -33,7 +33,6 @@ sonarqube {
 
 		// exclusions
 		property 'sonar.exclusions', ['docs/**']
-
 	}
 }
 
