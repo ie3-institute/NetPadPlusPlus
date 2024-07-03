@@ -58,7 +58,7 @@ dependencies {
 	}
 
 	// ie³ github repository
-	implementation ('com.github.ie3-institute:PowerSystemDataModel:2.1.0') {
+	implementation ('com.github.ie3-institute:PowerSystemDataModel:5.1.0') {
 		/* Exclude nested logging and ie³ related dependencies */
 		exclude group: 'org.slf4j'
 		exclude group: 'com.github.ie3-institute'
