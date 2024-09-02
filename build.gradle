@@ -20,7 +20,7 @@ ext {
 	//version (changing these should be considered thoroughly!)
 	javaVersion = JavaVersion.VERSION_11
 
-	jtsVersion = '1.19.0'
+	jtsVersion = '1.20.0'
 	javaFxVersion = '15-ea+1'
 
 	scriptsLocation = 'gradle' + File.separator + 'scripts' + File.separator //location of script plugins
