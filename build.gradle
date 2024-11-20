@@ -12,7 +12,7 @@ plugins {
 	id 'com.github.onslip.gradle-one-jar' version '1.1.0' // pack a self contained jar
 	id 'org.openjfx.javafxplugin' version '0.1.0' // java 11 javafx plugin for gradle
 	id 'jacoco' // java code coverage plugin
-	id "org.sonarqube" version "5.1.0.4882" // sonarqube
+	id "org.sonarqube" version "6.0.0.5145" // sonarqube
 	id "com.github.johnrengelman.shadow" version "7.1.2" // fat jar
 }
 
