@@ -50,7 +50,7 @@ public class LineLengthFixer {
         updatedGrid = setElectricalToGeographicalLineLength(allSubGrids, selectedSubnets);
         break;
       case ELECTRICAL:
-        /* TODO CK: Figure out, what to do here */
+      /* TODO CK: Figure out, what to do here */
       default:
         log.error("Unknown resolution mode '{}'", resolutionMode);
         return Optional.empty();
