@@ -5,21 +5,25 @@
 */
 package edu.ie3.netpad.grid.controller;
 
+import static java.lang.Math.*;
+
 import edu.ie3.datamodel.graph.SubGridGate;
 import edu.ie3.datamodel.graph.SubGridTopologyGraph;
 import edu.ie3.datamodel.models.UniqueEntity;
 import edu.ie3.datamodel.models.input.InputEntity;
+import edu.ie3.datamodel.models.input.MeasurementUnitInput;
 import edu.ie3.datamodel.models.input.NodeInput;
-import edu.ie3.datamodel.models.input.connector.LineInput;
-import edu.ie3.datamodel.models.input.connector.Transformer2WInput;
-import edu.ie3.datamodel.models.input.container.GridContainer;
-import edu.ie3.datamodel.models.input.container.JointGridContainer;
-import edu.ie3.datamodel.models.input.container.SubGridContainer;
+import edu.ie3.datamodel.models.input.connector.*;
+import edu.ie3.datamodel.models.input.container.*;
+import edu.ie3.datamodel.models.input.graphics.LineGraphicInput;
+import edu.ie3.datamodel.models.input.graphics.NodeGraphicInput;
 import edu.ie3.datamodel.models.input.system.LoadInput;
 import edu.ie3.datamodel.models.input.system.PvInput;
 import edu.ie3.datamodel.models.input.system.StorageInput;
 import edu.ie3.datamodel.models.input.system.SystemParticipantInput;
 import edu.ie3.datamodel.utils.ContainerUtils;
+import edu.ie3.datamodel.utils.GridAndGeoUtils;
+import edu.ie3.netpad.exception.GridManipulationException;
 import edu.ie3.netpad.grid.GridModel;
 import edu.ie3.netpad.grid.GridModification;
 import edu.ie3.netpad.grid.ModifiedSubGridData;
@@ -30,20 +34,33 @@ import edu.ie3.netpad.io.event.ReadGridEvent;
 import edu.ie3.netpad.io.event.SaveGridEvent;
 import edu.ie3.netpad.map.event.MapEvent;
 import edu.ie3.netpad.tool.controller.ToolController;
+import edu.ie3.netpad.tool.controller.ToolDialogs;
 import edu.ie3.netpad.tool.event.FixLineLengthRequestEvent;
 import edu.ie3.netpad.tool.event.LayoutGridRequestEvent;
 import edu.ie3.netpad.tool.event.LayoutGridResponse;
 import edu.ie3.netpad.tool.event.ToolEvent;
 import edu.ie3.netpad.tool.grid.LineLengthFixer;
 import edu.ie3.netpad.tool.grid.LineLengthResolutionMode;
+import edu.ie3.util.geo.GeoUtils;
+import edu.ie3.util.quantities.PowerSystemUnits;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
+import javax.measure.Quantity;
+import javax.measure.quantity.Angle;
+import javax.measure.quantity.Length;
+import net.morbz.osmonaut.osm.LatLon;
+import org.jgrapht.graph.DirectedAcyclicGraph;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.LineString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tech.units.indriya.ComparableQuantity;
+import tech.units.indriya.quantity.Quantities;
+import tech.units.indriya.unit.Units;
 
 /**
  * //ToDo: Class Description
@@ -90,7 +107,6 @@ public class GridController {
   }
 
   private void handleReadGridEvent(ReadGridEvent newValue) {
-
     // clear subGrids
     subGrids.clear();
 
@@ -223,6 +239,547 @@ public class GridController {
       // todo JH
 
     };
+  }
+
+  /**
+   * Fix the line length discrepancy based on the user given {@link ToolDialogs.FixLineLengthData}
+   *
+   * @param resolutionMode Selected resolution mode
+   * @param selectedSubnets Subnets to apply adjustments to
+   */
+  public void fixLineLength(LineLengthResolutionMode resolutionMode, Set<Integer> selectedSubnets) {
+    JointGridContainer updatedGrid;
+
+    /* Act depending on the chosen resolution mode */
+    switch (resolutionMode) {
+      case GEOGRAPHICAL:
+        updatedGrid = setElectricalToGeographicalLineLength(selectedSubnets);
+        break;
+      case ELECTRICAL:
+        updatedGrid = setGeographicalToElectricalLineLength(selectedSubnets);
+        break;
+      default:
+        log.error("Unknown resolution mode '{}'", resolutionMode);
+        return;
+    }
+
+    /* Build a new event and inform the listeners about the "new" / adapted grid model */
+    handleReadGridEvent(new ReadGridEvent(updatedGrid));
+  }
+
+  /**
+   * Sets the electrical length of all lines within the selected sub nets to the length of their
+   * geographical line string if apparent. If not, it is set to the geographical distance between
+   * start and end node.
+   *
+   * @param selectedSubnets Subnets to apply adjustments to
+   * @return A {@link JointGridContainer} with updated line models
+   * @deprecated This better fits in {@link GridAndGeoUtils}
+   */
+  @Deprecated
+  private JointGridContainer setElectricalToGeographicalLineLength(Set<Integer> selectedSubnets) {
+    /* Adjust the electrical line length to be the same as the geographical distance */
+    List<SubGridContainer> subGridContainers =
+        subGrids.values().parallelStream()
+            .map(GridModel::getSubGridContainer)
+            .map(
+                subGridContainer -> {
+                  if (!selectedSubnets.contains(subGridContainer.getSubnet())) {
+                    /* If this grid isn't selected, hand it back, as it is */
+                    return subGridContainer;
+                  } else {
+                    /* Update all lines */
+                    Set<LineInput> lines =
+                        subGridContainer.getRawGrid().getLines().parallelStream()
+                            .map(GridController::setLineLengthToGeographicDistance)
+                            .collect(Collectors.toSet());
+
+                    /* Put together, what has been there before */
+                    RawGridElements rawGrid =
+                        new RawGridElements(
+                            subGridContainer.getRawGrid().getNodes(),
+                            lines,
+                            subGridContainer.getRawGrid().getTransformer2Ws(),
+                            subGridContainer.getRawGrid().getTransformer3Ws(),
+                            subGridContainer.getRawGrid().getSwitches(),
+                            subGridContainer.getRawGrid().getMeasurementUnits());
+                    return new SubGridContainer(
+                        subGridContainer.getGridName(),
+                        subGridContainer.getSubnet(),
+                        rawGrid,
+                        subGridContainer.getSystemParticipants(),
+                        subGridContainer.getGraphics());
+                  }
+                })
+            .collect(Collectors.toList());
+
+    /* Assemble all sub grids to one container */
+    return ContainerUtils.combineToJointGrid(subGridContainers);
+  }
+
+  /**
+   * Adjusts the line length to the length of their geographical line string if apparent. If not, it
+   * is set to the geographical distance between start and end node.
+   *
+   * @param line line model to adjust
+   * @return The adjusted line model
+   * @deprecated This better fits in {@link GridAndGeoUtils}
+   */
+  @Deprecated
+  private static LineInput setLineLengthToGeographicDistance(LineInput line) {
+    ComparableQuantity<Length> lineLength;
+    lineLength =
+        lengthOfLineString(line.getGeoPosition())
+            .orElseGet(
+                () -> {
+                  log.warn(
+                      "Cannot determine the length of the line string of line '{}' as it only contains one coordinate."
+                          + " Take distance between it's nodes instead.",
+                      line);
+                  return GridAndGeoUtils.distanceBetweenNodes(line.getNodeA(), line.getNodeB());
+                });
+    return line.copy().length(lineLength).build();
+  }
+
+  /**
+   * Calculate the length of a line string
+   *
+   * @param lineString The line string to calculate the length of
+   * @return An option to the length, if it can be determined
+   * @deprecated This method should be transferred to PowerSystemUtils
+   */
+  @Deprecated
+  private static Optional<ComparableQuantity<Length>> lengthOfLineString(LineString lineString) {
+    Coordinate[] coordinates = lineString.getCoordinates();
+
+    if (coordinates.length == 1) {
+      return Optional.empty();
+    }
+
+    /* Go over the line piecewise and sum up the distance */
+    Coordinate a = coordinates[0];
+    Coordinate b = coordinates[1];
+    ComparableQuantity<Length> length = GeoUtils.calcHaversine(a.x, a.y, b.x, b.y);
+    for (int coordIndex = 2; coordIndex < coordinates.length; coordIndex++) {
+      a = b;
+      b = coordinates[coordIndex];
+      length = length.add(GeoUtils.calcHaversine(a.x, a.y, b.x, b.y));
+    }
+
+    return Optional.of(length);
+  }
+
+  /**
+   * Update the lines and nodes in the given joint grid container geo position
+   *
+   * @param selectedSubnets Set of selected sub grid numbers
+   * @return The updated grid container
+   * @deprecated This better fits in {@link GridAndGeoUtils}
+   */
+  @Deprecated
+  private JointGridContainer setGeographicalToElectricalLineLength(Set<Integer> selectedSubnets) {
+    /*
+     * TODO CK
+     *  1) Go through sub grid containers considering a "tree order" (from upper voltage level to lower)
+     *  2) Adapt the position of underlying grids according to the updated position of the upper grid
+     */
+
+    List<SubGridContainer> subGridContainers =
+        subGrids.values().parallelStream()
+            .map(GridModel::getSubGridContainer)
+            .map(
+                subGridContainer -> {
+                  if (selectedSubnets.contains(subGridContainer.getSubnet()))
+                    try {
+                      return setGeographicalToElectricalLineLength(subGridContainer);
+                    } catch (GridManipulationException e) {
+                      log.error(
+                          "Cannot adapt sub grid container '"
+                              + subGridContainer.getSubnet()
+                              + "'. Return the original one.",
+                          e);
+                      return subGridContainer;
+                    }
+                  else return subGridContainer;
+                })
+            .collect(Collectors.toList());
+
+    /* Assemble all sub grids to one container */
+    return ContainerUtils.combineToJointGrid(subGridContainers);
+  }
+
+  /**
+   * Go through each sub grid container and update the lines and nodes in geo position
+   *
+   * @param subGridContainer The sub grid container to adapt
+   * @return The updated grid container
+   * @throws GridManipulationException If the adaption of geographic position is not possible
+   * @deprecated This better fits in {@link GridAndGeoUtils}
+   */
+  @Deprecated
+  private SubGridContainer setGeographicalToElectricalLineLength(SubGridContainer subGridContainer)
+      throws GridManipulationException {
+    /* Determine the slack node as the starting point of the traversal through the grid */
+    Set<NodeInput> transformerNodes =
+        subGridContainer.getRawGrid().getTransformer2Ws().stream()
+            .map(Transformer2WInput::getNodeB)
+            .collect(Collectors.toSet());
+    transformerNodes.addAll(
+        subGridContainer.getRawGrid().getTransformer3Ws().stream()
+            .map(Transformer3WInput::getNodeB)
+            .collect(Collectors.toSet()));
+    transformerNodes.addAll(
+        subGridContainer.getRawGrid().getTransformer3Ws().stream()
+            .map(Transformer3WInput::getNodeC)
+            .collect(Collectors.toSet()));
+    if (transformerNodes.size() > 1)
+      throw new GridManipulationException(
+          "There is more than one starting node in subnet '"
+              + subGridContainer.getSubnet()
+              + "'. Currently only star topology is supported.");
+    NodeInput startNode =
+        transformerNodes.stream()
+            .findFirst()
+            .orElseThrow(
+                () ->
+                    new GridManipulationException(
+                        "Cannot determine the starting node of subnet '"
+                            + subGridContainer.getSubnet()
+                            + "'."));
+
+    /* Build a topology graph of lines and switches to ensure, that the sub grid is a acyclic star-type topology */
+    DirectedAcyclicGraph<NodeInput, ConnectorInput> topologyGraph =
+        new DirectedAcyclicGraph<>(ConnectorInput.class);
+    try {
+      subGridContainer.getRawGrid().allEntitiesAsList().stream()
+          .filter(
+              element ->
+                  LineInput.class.isAssignableFrom(element.getClass())
+                      || SwitchInput.class.isAssignableFrom(element.getClass()))
+          .map(element -> (ConnectorInput) element)
+          .forEach(
+              connector -> {
+                /* Build the topology graph */
+                topologyGraph.addVertex(connector.getNodeA());
+                topologyGraph.addVertex(connector.getNodeB());
+                topologyGraph.addEdge(connector.getNodeA(), connector.getNodeB(), connector);
+              });
+    } catch (IllegalArgumentException e) {
+      throw new GridManipulationException(
+          "The given sub grid topology of sub net '"
+              + subGridContainer.getSubnet()
+              + "' is not suitable for this operation. It has to be acyclic.",
+          e);
+    }
+
+    /* Start from the slack node and traverse downwards */
+    Map<UUID, NodeInput> nodeMapping =
+        new HashMap<>(subGridContainer.getRawGrid().getNodes().size());
+    Set<LineInput> updatedLines = new HashSet<>(subGridContainer.getRawGrid().getLines().size());
+    nodeMapping.put(startNode.getUuid(), startNode);
+    traverseAndUpdateLines(startNode, topologyGraph, nodeMapping, updatedLines);
+
+    return update(subGridContainer, nodeMapping, updatedLines);
+  }
+
+  /**
+   * Traverses through the topology graph with depth-first-search and update the positions of the
+   * nodes and lines.
+   *
+   * @param startNode Node, at which the traversal starts
+   * @param topologyGraph Graph, that depicts the sub grid containers topology
+   * @param nodeMapping Mapping from "old" node's uuid to new node model
+   * @param updatedLines Collection of updated line models
+   * @throws GridManipulationException If no updated version of the given start node can be
+   *     determined
+   * @deprecated This better fits in {@link GridAndGeoUtils}
+   */
+  @Deprecated
+  private void traverseAndUpdateLines(
+      NodeInput startNode,
+      DirectedAcyclicGraph<NodeInput, ConnectorInput> topologyGraph,
+      Map<UUID, NodeInput> nodeMapping,
+      Set<LineInput> updatedLines)
+      throws GridManipulationException {
+    Set<LineInput> descendantLines =
+        topologyGraph.edgesOf(startNode).stream()
+            .filter(
+                connector ->
+                    LineInput.class.isAssignableFrom(connector.getClass())
+                        && updatedLines.stream()
+                            .noneMatch(ul -> ul.getUuid().equals(connector.getUuid())))
+            .map(connector -> (LineInput) connector)
+            .collect(Collectors.toSet());
+    for (LineInput line : descendantLines) {
+      /* Determine the bearing (we are still operating on the "old" lines and nodes) */
+      Coordinate coordinateA = startNode.getGeoPosition().getCoordinate();
+      NodeInput nodeB = line.getNodeA().equals(startNode) ? line.getNodeB() : line.getNodeA();
+      Coordinate coordinateB = nodeB.getGeoPosition().getCoordinate();
+      ComparableQuantity<Angle> bearing =
+          getBearing(
+              new LatLon(coordinateA.y, coordinateA.x), new LatLon(coordinateB.y, coordinateB.x));
+
+      /* Determine the new geo position */
+      NodeInput updatedNodeA = nodeMapping.get(startNode.getUuid());
+      if (Objects.isNull(updatedNodeA))
+        throw new GridManipulationException(
+            "Cannot update grid, as there is an issue with updated nodes");
+      Coordinate updatedCoordinateA = updatedNodeA.getGeoPosition().getCoordinate();
+      LatLon latLonB =
+          secondCoordinateWithDistanceAndBearing(
+              new LatLon(updatedCoordinateA.y, updatedCoordinateA.x), line.getLength(), bearing);
+
+      /* Copy node B */
+      NodeInput updatedNodeB = nodeB.copy().geoPosition(GeoUtils.latlonToPoint(latLonB)).build();
+      nodeMapping.put(nodeB.getUuid(), updatedNodeB);
+
+      /* Adapt the line */
+      LineInput updatedLine =
+          line.copy()
+              .nodeA(updatedNodeA)
+              .nodeB(updatedNodeB)
+              .geoPosition(
+                  GridAndGeoUtils.buildSafeLineStringBetweenNodes(updatedNodeA, updatedNodeB))
+              .build();
+      updatedLines.add(updatedLine);
+
+      /* Go deeper at the node, that we last have traveled */
+      traverseAndUpdateLines(nodeB, topologyGraph, nodeMapping, updatedLines);
+    }
+  }
+
+  /**
+   * Updates the whole container by replacing the nodes in each element and set the updated lines
+   *
+   * @param container The container to update
+   * @param nodeMapping Mapping from "old" node's uuid to new node model
+   * @param updatedLines Collection of updated line models
+   * @param <C> Type of the container to update
+   * @return The updated container
+   */
+  private <C extends GridContainer> C update(
+      C container, Map<UUID, NodeInput> nodeMapping, Set<LineInput> updatedLines) {
+    /* Update the raw grid */
+    RawGridElements rawGrid = container.getRawGrid();
+    Set<NodeInput> nodes =
+        rawGrid.getNodes().stream()
+            .map(node -> nodeMapping.getOrDefault(node.getUuid(), node))
+            .collect(Collectors.toSet());
+    /* If there is an updated line with the same uuid, take this one, otherwise take the existing one. */
+    Set<LineInput> lines =
+        rawGrid.getLines().stream()
+            .map(
+                line ->
+                    updatedLines.stream()
+                        .filter(updatedLine -> updatedLine.getUuid().equals(line.getUuid()))
+                        .findFirst()
+                        .orElse(line))
+            .map(
+                line ->
+                    line.copy()
+                        .nodeA(nodeMapping.getOrDefault(line.getNodeA().getUuid(), line.getNodeA()))
+                        .nodeB(nodeMapping.getOrDefault(line.getNodeB().getUuid(), line.getNodeB()))
+                        .build())
+            .collect(Collectors.toSet());
+    Set<Transformer2WInput> transformers2w =
+        rawGrid.getTransformer2Ws().stream()
+            .map(
+                transformer ->
+                    transformer
+                        .copy()
+                        .nodeA(
+                            nodeMapping.getOrDefault(
+                                transformer.getNodeA().getUuid(), transformer.getNodeA()))
+                        .nodeB(
+                            nodeMapping.getOrDefault(
+                                transformer.getNodeB().getUuid(), transformer.getNodeB()))
+                        .build())
+            .collect(Collectors.toSet());
+    Set<Transformer3WInput> transformers3w =
+        rawGrid.getTransformer3Ws().stream()
+            .map(
+                transformer ->
+                    transformer
+                        .copy()
+                        .nodeA(
+                            nodeMapping.getOrDefault(
+                                transformer.getNodeA().getUuid(), transformer.getNodeA()))
+                        .nodeB(
+                            nodeMapping.getOrDefault(
+                                transformer.getNodeB().getUuid(), transformer.getNodeB()))
+                        .nodeC(
+                            nodeMapping.getOrDefault(
+                                transformer.getNodeC().getUuid(), transformer.getNodeC()))
+                        .build())
+            .collect(Collectors.toSet());
+    Set<SwitchInput> switches =
+        rawGrid.getSwitches().stream()
+            .map(
+                switcher ->
+                    switcher
+                        .copy()
+                        .nodeA(
+                            nodeMapping.getOrDefault(
+                                switcher.getNodeA().getUuid(), switcher.getNodeA()))
+                        .nodeB(
+                            nodeMapping.getOrDefault(
+                                switcher.getNodeB().getUuid(), switcher.getNodeB()))
+                        .build())
+            .collect(Collectors.toSet());
+    Set<MeasurementUnitInput> measurements =
+        rawGrid.getMeasurementUnits().stream()
+            .map(
+                measurement ->
+                    measurement
+                        .copy()
+                        .node(
+                            nodeMapping.getOrDefault(
+                                measurement.getNode().getUuid(), measurement.getNode()))
+                        .build())
+            .collect(Collectors.toSet());
+    RawGridElements updatedRawGridElements =
+        new RawGridElements(nodes, lines, transformers2w, transformers3w, switches, measurements);
+
+    /* Update system participants */
+    List<SystemParticipantInput> updatedElements =
+        container.getSystemParticipants().allEntitiesAsList().stream()
+            .map(
+                participant ->
+                    participant
+                        .copy()
+                        .node(
+                            nodeMapping.getOrDefault(
+                                participant.getNode().getUuid(), participant.getNode()))
+                        .build())
+            .collect(Collectors.toList());
+    SystemParticipants updatedParticipants = new SystemParticipants(updatedElements);
+
+    /* Update graphic elements */
+    GraphicElements graphics = container.getGraphics();
+    Set<NodeGraphicInput> nodeGraphics =
+        graphics.getNodeGraphics().stream()
+            .map(
+                graphic ->
+                    graphic
+                        .copy()
+                        .node(
+                            nodeMapping.getOrDefault(
+                                graphic.getNode().getUuid(), graphic.getNode()))
+                        .build())
+            .collect(Collectors.toSet());
+    Map<UUID, LineInput> lineMapping =
+        updatedLines.stream().collect(Collectors.toMap(UniqueEntity::getUuid, line -> line));
+    Set<LineGraphicInput> lineGraphics =
+        graphics.getLineGraphics().stream()
+            .map(
+                graphic ->
+                    graphic
+                        .copy()
+                        .line(
+                            lineMapping.getOrDefault(
+                                graphic.getLine().getUuid(), graphic.getLine()))
+                        .build())
+            .collect(Collectors.toSet());
+    GraphicElements updatedGraphics = new GraphicElements(nodeGraphics, lineGraphics);
+
+    if (JointGridContainer.class.isAssignableFrom(container.getClass()))
+      return (C)
+          new JointGridContainer(
+              container.getGridName(),
+              updatedRawGridElements,
+              updatedParticipants,
+              updatedGraphics);
+    else
+      return (C)
+          new SubGridContainer(
+              container.getGridName(),
+              ((SubGridContainer) container).getSubnet(),
+              updatedRawGridElements,
+              updatedParticipants,
+              updatedGraphics);
+  }
+
+  /**
+   * Determine the bearing between two coordinates on the earth surface.
+   *
+   * @param latLon1 First coordinate
+   * @param latLon2 Second coordinate
+   * @return The bearing in {@link PowerSystemUnits#DEGREE_GEOM}
+   * @deprecated This better fits in {@link GeoUtils}
+   */
+  @Deprecated
+  private static ComparableQuantity<Angle> getBearing(LatLon latLon1, LatLon latLon2) {
+    double lat1Rad = toRadians(latLon1.getLat());
+    double long1Rad = toRadians(latLon1.getLon());
+    double lat2Rad = toRadians(latLon2.getLat());
+    double long2Rad = toRadians(latLon2.getLon());
+
+    /* Determine distance between both points in km */
+    double distance =
+        GeoUtils.calcHaversine(
+                latLon1.getLat(), latLon1.getLon(), latLon2.getLat(), latLon2.getLon())
+            .getValue()
+            .doubleValue();
+
+    /* Calculate the portion of the given distance from a full turnaround around the earth */
+    double portionOfFullTurnaround =
+        distance / GeoUtils.EARTH_RADIUS.to(PowerSystemUnits.KILOMETRE).getValue().doubleValue();
+
+    double bearing =
+        toDegrees(
+            asin(
+                (tan(long2Rad - long1Rad)
+                        * (cos(portionOfFullTurnaround) - sin(lat1Rad) * sin(lat2Rad)))
+                    / (sin(portionOfFullTurnaround) * cos(lat1Rad))));
+
+    /* Adapt the bearing (+/-90°) in order to meet our understanding of the bearing (0...360°) */
+    if (lat2Rad <= lat1Rad) bearing = 180 - bearing;
+    else if (long2Rad < long1Rad) bearing = 360 + bearing;
+
+    return Quantities.getQuantity(bearing, PowerSystemUnits.DEGREE_GEOM);
+  }
+
+  /**
+   * Calculates a second coordinate in relation to a start coordinate, a bearing and a given
+   * distance. Many thanks to <a href="https://github.com/shayanjm">shayanjm<a/> for his very
+   * helpful <a href="https://gist.github.com/shayanjm/451a3242685225aa934b">Clojure-Gist</a>, which
+   * served as a blue print for this implementation
+   *
+   * @param start Start position
+   * @param distanceQty Intended distance between start and target position
+   * @param bearingQty Intended bearing between start and target position (0° points northbound,
+   *     increasing clockwise)
+   * @return The second coordinate with intended distance and bearing with reference to the start
+   *     coordinate
+   * @deprecated This better fits in {@link GeoUtils}
+   */
+  @Deprecated
+  private static LatLon secondCoordinateWithDistanceAndBearing(
+      LatLon start, Quantity<Length> distanceQty, Quantity<Angle> bearingQty) {
+    /* Do the unit conversions, so that the input complies to specifications */
+    double distance = distanceQty.to(PowerSystemUnits.KILOMETRE).getValue().doubleValue();
+    double bearing = bearingQty.to(Units.RADIAN).getValue().doubleValue();
+    double latStart = toRadians(start.getLat());
+    double longStart = toRadians(start.getLon());
+
+    /* Calculate the portion of the given distance from a full turnaround around the earth */
+    double portionOfFullTurnaround =
+        distance / GeoUtils.EARTH_RADIUS.to(PowerSystemUnits.KILOMETRE).getValue().doubleValue();
+
+    /* Calculate the target coordinate */
+    double targetLatRad =
+        asin(
+            sin(latStart) * cos(portionOfFullTurnaround)
+                + cos(latStart)
+                    * sin(portionOfFullTurnaround)
+                    * cos(bearing)); // Do not convert to degrees. Is used in second formula.
+    double targetLongRad =
+        longStart
+            + atan2(
+                sin(bearing) * sin(portionOfFullTurnaround) * cos(latStart),
+                cos(portionOfFullTurnaround) - sin(latStart) * sin(targetLatRad));
+
+    return new LatLon(toDegrees(targetLatRad), toDegrees(targetLongRad));
   }
 
   private ChangeListener<IOEvent> ioEventListener() {
