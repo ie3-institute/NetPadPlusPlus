@@ -94,7 +94,7 @@ dependencies {
 	implementation "org.openjfx:javafx-swing:$javaFxVersion"
 	implementation "org.openjfx:javafx-graphics:$javaFxVersion"
 	implementation "org.openjfx:javafx-web:$javaFxVersion"
-	implementation 'org.controlsfx:controlsfx:11.2.1'
+	implementation 'org.controlsfx:controlsfx:11.2.2'
 
 	// Apache POI
 	implementation 'org.apache.poi:poi-ooxml:5.4.1'
