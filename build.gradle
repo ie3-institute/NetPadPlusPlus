@@ -71,7 +71,7 @@ dependencies {
 	}
 
 	// Quantities
-	implementation 'tech.units:indriya:2.2.2'
+	implementation 'tech.units:indriya:2.2.3'
 
 	// JTS
 	implementation ("org.locationtech.jts:jts-core:${jtsVersion}"){
