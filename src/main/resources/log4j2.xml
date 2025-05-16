@@ -42,6 +42,10 @@
             <AppenderRef ref="Console" level="info"/>
             <AppenderRef ref="RF" level="debug"/>
         </asyncRoot>
+        <logger name="edu.ie3.netpad" additivity="false">
+            <AppenderRef ref="Console" level="info"/>
+            <AppenderRef ref="RF" level="debug"/>
+        </logger>
         <logger name="edu.ie3.datamodel" additivity="false">
             <AppenderRef ref="Console" level="off"/>
             <AppenderRef ref="RF-psdm" level="debug"/>
