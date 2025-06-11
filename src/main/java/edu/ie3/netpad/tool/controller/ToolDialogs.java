@@ -44,11 +44,10 @@ public class ToolDialogs {
     ToggleButton electricalBtn = new RadioButton("Electrical → Geographical");
     electricalBtn.setUserData(ELECTRICAL);
     electricalBtn.setToggleGroup(tglGrp);
-    electricalBtn.setDisable(true);
     ToggleButton geographicalBtn = new RadioButton("Geographical → Electrical");
     geographicalBtn.setUserData(GEOGRAPHICAL);
     geographicalBtn.setToggleGroup(tglGrp);
-    tglGrp.selectToggle(geographicalBtn);
+    tglGrp.selectToggle(electricalBtn);
     gridPane.addRow(0, modeLbl, electricalBtn);
     gridPane.add(geographicalBtn, 1, 1);
 
